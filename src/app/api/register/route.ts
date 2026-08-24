@@ -4,31 +4,49 @@ import bcrypt from "bcryptjs";
 
 export async function POST(req: NextRequest) {
   try {
-    const { name, email, password } = await req.json();
+    const { name, phone, email, password } = await req.json();
 
-    if (!name || !email || !password) {
+    if (!phone) {
       return NextResponse.json(
-        { error: "Name, email, and password are required" },
+        { error: "Mobile number is required" },
+        { status: 400 }
+      );
+    }
+
+    if (!/^[6-9]\d{9}$/.test(phone)) {
+      return NextResponse.json(
+        { error: "Valid 10-digit mobile number required" },
         { status: 400 }
       );
     }
 
     const existingUser = await prisma.user.findUnique({
-      where: { email },
+      where: { phone },
     });
 
     if (existingUser) {
       return NextResponse.json(
-        { error: "Email already registered" },
+        { error: "Phone number already registered" },
         { status: 400 }
       );
     }
 
-    const hashedPassword = await bcrypt.hash(password, 12);
+    const data: Record<string, unknown> = {
+      phone,
+      name: name || `User ${phone.slice(-4)}`,
+    };
+
+    if (email) {
+      data.email = email;
+    }
+
+    if (password) {
+      data.password = await bcrypt.hash(password, 12);
+    }
 
     const user = await prisma.user.create({
-      data: { name, email, password: hashedPassword },
-      select: { id: true, name: true, email: true },
+      data,
+      select: { id: true, name: true, phone: true },
     });
 
     return NextResponse.json({ user });

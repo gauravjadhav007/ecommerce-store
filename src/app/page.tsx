@@ -2,21 +2,19 @@ import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { parseImages } from "@/lib/utils";
 import FeaturedProductCard from "@/components/FeaturedProductCard";
-import { Check, Zap, ArrowRight } from "lucide-react";
+import { Check, Zap, ArrowRight, Share2, Copy, Star } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
 const reviews = [
-  { name: "Priya Sharma", location: "Mumbai", rating: 5, text: "Finally found products that actually taste amazing! My absolute favorite. The quality is unmatched." },
-  { name: "Rahul Verma", location: "Delhi", rating: 4, text: "Great products! Perfect flavor without being too much. Great protein snack for my gym routine." },
-  { name: "Anjali Patel", location: "Bangalore", rating: 5, text: "Love that it's quality tested, not mass produced. The originals are pure comfort. Ordered 5 packs already!" },
-  { name: "Sneha Gupta", location: "Pune", rating: 5, text: "Best online shopping I've ever had. The quality is unreal. My whole family is hooked!" },
-  { name: "Arjun Mehta", location: "Hyderabad", rating: 5, text: "Bought this for a party. Everyone asked where to buy. Now I'm the go-to guy for recommendations!" },
-  { name: "Kavita Reddy", location: "Chennai", rating: 4, text: "Good quality and the packaging is top notch. The crunch and quality itself is top notch." },
-  { name: "Rohan Singh", location: "Jaipur", rating: 4, text: "Delivery took a bit longer than expected, but the product was fresh and well packed. My favourite!" },
-  { name: "Meera Iyer", location: "Kochi", rating: 5, text: "My go-to for gifting. Pure and clean, exactly what I was looking for." },
-  { name: "Vikram Joshi", location: "Ahmedabad", rating: 5, text: "The packaging is premium, the taste is premium, everything about this brand screams quality. Highly recommend!" },
-  { name: "Pooja Agarwal", location: "Lucknow", rating: 4, text: "The packaging is premium and the product stays fresh. Replaced my evening habit with this. Healthier and just as tasty." },
+  { name: "Priya Sharma", location: "Mumbai", rating: 5, text: "Finally found products that actually taste amazing! My absolute favorite. The quality is unmatched.", verified: true, product: "Premium Cotton T-Shirt" },
+  { name: "Rahul Verma", location: "Delhi", rating: 4, text: "Great products! Perfect fit and finish. The material feels premium. Great value for money.", verified: true, product: "Wireless Earbuds Pro" },
+  { name: "Anjali Patel", location: "Bangalore", rating: 5, text: "Love the quality! Ordered 5 packs already. The originals are pure comfort. My whole family is hooked!", verified: true, product: "Organic Cotton Hoodie" },
+  { name: "Sneha Gupta", location: "Pune", rating: 5, text: "Best online shopping I've ever had. The quality is unreal. Delivery was super fast too!", verified: false, product: "Slim Fit Jeans" },
+  { name: "Arjun Mehta", location: "Hyderabad", rating: 5, text: "Bought this for a party. Everyone asked where to buy. Now I'm the go-to guy for recommendations!", verified: true, product: "Classic Polo Shirt" },
+  { name: "Kavita Reddy", location: "Chennai", rating: 4, text: "Good quality and the packaging is top notch. The fabric feels premium and comfortable.", verified: true, product: "Running Shoes" },
+  { name: "Rohan Singh", location: "Jaipur", rating: 4, text: "Delivery took a bit longer than expected, but the product was fresh and well packed.", verified: false, product: "Denim Jacket" },
+  { name: "Meera Iyer", location: "Kochi", rating: 5, text: "My go-to for gifting. Pure and clean, exactly what I was looking for. Highly recommend!", verified: true, product: "Casual Sneakers" },
 ];
 
 export default async function HomePage() {
@@ -27,40 +25,38 @@ export default async function HomePage() {
     include: { category: true, variants: true },
   });
 
-  const allProducts = await prisma.product.findMany({
-    where: { isActive: true },
-    take: 8,
-    orderBy: { createdAt: "desc" },
-    include: { category: true, variants: true },
+  const categories = await prisma.category.findMany({
+    take: 6,
+    include: { products: { where: { isActive: true }, take: 1 } },
   });
 
   return (
     <div className="min-h-screen bg-white">
-      {/* Hero - matches reference: dark bg, label, headline, description, CTA */}
-      <section className="bg-black text-white">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-24 md:py-32">
+      {/* Hero - Product-focused like reference */}
+      <section className="relative bg-gradient-to-br from-blue-50 via-white to-indigo-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16 md:py-20">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 items-center">
             <div>
-              <span className="text-blue-400 text-xs font-semibold tracking-[0.3em] uppercase mb-4 block">
-                Premium Collection
+              <span className="inline-block bg-blue-100 text-blue-700 text-xs font-semibold px-3 py-1 rounded-full mb-4">
+                New Collection 2024
               </span>
-              <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold mb-6 leading-tight">
-                Shop Smart.
-                <span className="block text-blue-400">Live Better.</span>
+              <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold text-gray-900 mb-4 leading-tight">
+                Premium Quality
+                <span className="block text-blue-600">For Modern Living</span>
               </h1>
-              <p className="text-gray-400 text-base sm:text-lg mb-8 max-w-lg leading-relaxed">
-                Curated products for modern living. Quality you can trust, prices you will love. No shortcuts. No compromises. Just honest, quality shopping.
+              <p className="text-gray-600 text-base sm:text-lg mb-8 max-w-lg leading-relaxed">
+                Curated products for modern living. Quality you can trust, prices you will love. No shortcuts. No compromises.
               </p>
               <div className="flex flex-wrap gap-3">
                 <Link
                   href="#products"
-                  className="inline-block bg-blue-600 text-white px-8 py-3.5 font-semibold hover:bg-blue-700 transition-colors text-sm tracking-wide uppercase"
+                  className="inline-block bg-blue-600 text-white px-8 py-3.5 font-semibold hover:bg-blue-700 transition-colors text-sm tracking-wide"
                 >
                   Shop Now
                 </Link>
                 <Link
                   href="#story"
-                  className="inline-block border border-white/30 text-white px-8 py-3.5 font-semibold hover:bg-white/10 transition-colors text-sm tracking-wide uppercase"
+                  className="inline-block border border-gray-300 text-gray-700 px-8 py-3.5 font-semibold hover:bg-gray-50 transition-colors text-sm tracking-wide"
                 >
                   Our Story
                 </Link>
@@ -68,9 +64,20 @@ export default async function HomePage() {
             </div>
             <div className="hidden lg:flex justify-center">
               <div className="relative">
-                <div className="w-80 h-80 bg-gradient-to-br from-blue-600/20 to-purple-600/20 rounded-full flex items-center justify-center">
-                  <div className="w-60 h-60 bg-gradient-to-br from-blue-500/30 to-blue-700/30 rounded-full flex items-center justify-center">
-                    <Zap className="w-24 h-24 text-blue-400" />
+                <div className="w-80 h-80 bg-gradient-to-br from-blue-100 to-indigo-100 rounded-full flex items-center justify-center">
+                  <div className="w-60 h-60 bg-gradient-to-br from-blue-200 to-blue-300 rounded-full flex items-center justify-center">
+                    <Zap className="w-24 h-24 text-blue-600" />
+                  </div>
+                </div>
+                <div className="absolute -bottom-4 -right-4 bg-white rounded-xl shadow-lg p-4">
+                  <div className="flex items-center gap-2">
+                    <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
+                      <Check className="w-5 h-5 text-green-600" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-semibold text-gray-900">10,000+</p>
+                      <p className="text-xs text-gray-500">Happy Customers</p>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -79,9 +86,9 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* Trust Badges - matches reference with emojis */}
-      <section className="border-b border-gray-100">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+      {/* Trust Badges - Like reference */}
+      <section className="border-b border-gray-100 bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-2 md:grid-cols-5 divide-x divide-gray-100">
             {[
               { emoji: "🛡️", label: "Secure Checkout", sub: "100% Safe" },
@@ -100,20 +107,97 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* Featured Products - Reference style with Add to Cart */}
+      {/* Category Circles - Like reference */}
+      <section className="py-12 sm:py-16 bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex overflow-x-auto gap-6 pb-4 scrollbar-hide">
+            {categories.map((cat) => (
+              <Link
+                key={cat.id}
+                href={`/products?category=${cat.slug}`}
+                className="flex-shrink-0 group"
+              >
+                <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-full bg-gradient-to-br from-blue-50 to-indigo-50 flex items-center justify-center border-2 border-transparent group-hover:border-blue-500 transition-all">
+                  <div className="text-center">
+                    <Zap className="w-8 h-8 text-blue-600 mx-auto mb-1" />
+                    <span className="text-xs font-medium text-gray-700 line-clamp-1">{cat.name}</span>
+                  </div>
+                </div>
+              </Link>
+            ))}
+            <Link
+              href="/products"
+              className="flex-shrink-0 group"
+            >
+              <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-full bg-gray-100 flex items-center justify-center border-2 border-transparent group-hover:border-blue-500 transition-all">
+                <div className="text-center">
+                  <ArrowRight className="w-8 h-8 text-gray-400 mx-auto mb-1" />
+                  <span className="text-xs font-medium text-gray-700">All Products</span>
+                </div>
+              </div>
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* Marquee Promotional Banners - Like reference */}
+      <section className="py-4 bg-gray-50 overflow-hidden">
+        <div className="flex animate-scroll-left gap-4 w-max">
+          {[
+            { text: "Launch Offer: Flat 20% off on all products", icon: "🎉" },
+            { text: "Combo Deal: Buy any 3 items, save ₹50", icon: "🎁" },
+            { text: "Free Delivery on orders above ₹499", icon: "🚚" },
+            { text: "New Arrivals: Check out our latest collection", icon: "✨" },
+            { text: "Premium Quality: 100% genuine products", icon: "⭐" },
+            { text: "Easy Returns: 7-day hassle-free policy", icon: "🔄" },
+          ].map((promo, i) => (
+            <div
+              key={i}
+              className="flex-shrink-0 bg-white border border-gray-200 rounded-lg px-5 py-2.5 flex items-center gap-2"
+            >
+              <span>{promo.icon}</span>
+              <span className="text-sm font-medium text-gray-700">{promo.text}</span>
+            </div>
+          ))}
+          {/* Duplicate for seamless scroll */}
+          {[
+            { text: "Launch Offer: Flat 20% off on all products", icon: "🎉" },
+            { text: "Combo Deal: Buy any 3 items, save ₹50", icon: "🎁" },
+            { text: "Free Delivery on orders above ₹499", icon: "🚚" },
+            { text: "New Arrivals: Check out our latest collection", icon: "✨" },
+            { text: "Premium Quality: 100% genuine products", icon: "⭐" },
+            { text: "Easy Returns: 7-day hassle-free policy", icon: "🔄" },
+          ].map((promo, i) => (
+            <div
+              key={`dup-${i}`}
+              className="flex-shrink-0 bg-white border border-gray-200 rounded-lg px-5 py-2.5 flex items-center gap-2"
+            >
+              <span>{promo.icon}</span>
+              <span className="text-sm font-medium text-gray-700">{promo.text}</span>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* Featured Products - Bestseller style like reference */}
       {featuredProducts.length > 0 && (
         <section id="products" className="py-14 sm:py-20 md:py-24">
-          <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="text-center mb-12">
-              <span className="text-blue-600 text-xs font-semibold tracking-[0.2em] uppercase mb-3 block">
-                Featured
-              </span>
-              <h2 className="text-2xl sm:text-3xl font-bold text-gray-900">
-                Pick Your Story
-              </h2>
-              <p className="text-gray-500 mt-3 max-w-lg mx-auto text-sm sm:text-base">
-                Handpicked products curated just for you. Quality, style, and value in every pick. Healthy shopping for every mood.
-              </p>
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex items-center justify-between mb-10">
+              <div>
+                <span className="text-blue-600 text-xs font-semibold tracking-[0.2em] uppercase mb-2 block">
+                  Bestsellers
+                </span>
+                <h2 className="text-2xl sm:text-3xl font-bold text-gray-900">
+                  Featured Products
+                </h2>
+              </div>
+              <Link
+                href="/products"
+                className="text-sm font-semibold text-blue-600 hover:text-blue-700 transition-colors hidden sm:block"
+              >
+                View All →
+              </Link>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -122,7 +206,7 @@ export default async function HomePage() {
               ))}
             </div>
 
-            <div className="text-center mt-10">
+            <div className="text-center mt-10 sm:hidden">
               <Link
                 href="/products"
                 className="inline-flex items-center gap-2 text-sm font-semibold text-blue-600 hover:text-blue-700 transition-colors"
@@ -134,25 +218,37 @@ export default async function HomePage() {
         </section>
       )}
 
-      {/* Product Detail Image (like reference) */}
-      <section className="py-4">
-        <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="bg-gray-50 rounded-2xl overflow-hidden">
-            <div className="aspect-video flex items-center justify-center">
-              <div className="text-center p-8">
-                <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <Zap className="w-8 h-8 text-blue-600" />
-                </div>
-                <p className="text-gray-400 text-sm">Product Showcase</p>
+      {/* Why Choose Us - Like reference "Why Makhana?" */}
+      <section className="py-14 sm:py-20 md:py-24 bg-gray-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12">
+            <h2 className="text-2xl sm:text-3xl font-bold text-gray-900">
+              Why Choose Us?
+            </h2>
+            <p className="text-gray-500 mt-3 text-sm sm:text-base">
+              The store that checks every box
+            </p>
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+            {[
+              { emoji: "💪", title: "Quality Guaranteed", desc: "Every product tested and verified" },
+              { emoji: "🚚", title: "Free Delivery", desc: "Free shipping on orders above ₹499" },
+              { emoji: "🔄", title: "Easy Returns", desc: "7-day hassle-free return policy" },
+              { emoji: "⭐", title: "Top Rated", desc: "5-star rated by happy customers" },
+            ].map((item) => (
+              <div key={item.title} className="text-center bg-white rounded-xl p-6 border border-gray-100 hover:shadow-md transition-shadow">
+                <span className="text-3xl block mb-3">{item.emoji}</span>
+                <h3 className="font-bold text-gray-900 text-sm mb-1">{item.title}</h3>
+                <p className="text-gray-500 text-xs leading-relaxed">{item.desc}</p>
               </div>
-            </div>
+            ))}
           </div>
         </div>
       </section>
 
-      {/* Our Story - matches reference layout */}
+      {/* Our Story - Like reference */}
       <section id="story" className="py-14 sm:py-20 md:py-24">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
             <div>
               <span className="text-blue-600 text-xs font-semibold tracking-[0.2em] uppercase mb-3 block">
@@ -180,13 +276,13 @@ export default async function HomePage() {
                 Read our full story →
               </Link>
             </div>
-            <div className="bg-gray-50 rounded-2xl overflow-hidden">
+            <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl overflow-hidden">
               <div className="aspect-video flex items-center justify-center">
                 <div className="text-center p-8">
                   <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
                     <Check className="w-8 h-8 text-blue-600" />
                   </div>
-                  <p className="text-gray-400 text-sm">Our Store Image</p>
+                  <p className="text-gray-500 text-sm">Our Story Image</p>
                 </div>
               </div>
             </div>
@@ -194,112 +290,16 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* Why Shop With Us - matches reference "Why Makhana?" */}
-      <section className="py-14 sm:py-20 md:py-24 bg-gray-50">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12">
-            <h2 className="text-2xl sm:text-3xl font-bold text-gray-900">
-              Why Shop With Us?
-            </h2>
-            <p className="text-gray-500 mt-3 text-sm sm:text-base">
-              The store that checks every box
-            </p>
-          </div>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-            {[
-              { emoji: "💪", title: "Quality Guaranteed", desc: "Every product tested and verified before listing" },
-              { emoji: "🚚", title: "Free Delivery", desc: "Free shipping on all orders above ₹499" },
-              { emoji: "🔄", title: "Easy Returns", desc: "7-day hassle-free return policy" },
-              { emoji: "⭐", title: "Top Rated", desc: "5-star rated by thousands of happy customers" },
-            ].map((item) => (
-              <div key={item.title} className="text-center bg-white rounded-xl p-6 border border-gray-100">
-                <span className="text-3xl block mb-3">{item.emoji}</span>
-                <h3 className="font-bold text-gray-900 text-sm mb-1">{item.title}</h3>
-                <p className="text-gray-500 text-xs leading-relaxed">{item.desc}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* All Products */}
-      {allProducts.length > 0 && (
-        <section className="py-14 sm:py-20 md:py-24">
-          <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="text-center mb-12">
-              <h2 className="text-2xl sm:text-3xl font-bold text-gray-900">
-                Explore Our Collection
-              </h2>
-            </div>
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
-              {allProducts.map((product) => {
-                const images = parseImages(product.images);
-                const discount =
-                  product.compareAt && product.compareAt > product.price
-                    ? Math.round(
-                        ((product.compareAt - product.price) / product.compareAt) * 100
-                      )
-                    : 0;
-
-                return (
-                  <Link
-                    key={product.id}
-                    href={`/products/${product.slug}`}
-                    className="group block bg-white rounded-xl overflow-hidden border border-gray-100 hover:shadow-lg transition-shadow"
-                  >
-                    <div className="relative aspect-square bg-gray-50">
-                      {images[0] ? (
-                        <img
-                          src={images[0]}
-                          alt={product.name}
-                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                        />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center">
-                          <Zap className="w-8 h-8 text-gray-300" />
-                        </div>
-                      )}
-                      {discount > 0 && (
-                        <span className="absolute top-2 left-2 bg-red-500 text-white text-[10px] font-bold px-2 py-0.5 rounded">
-                          {discount}% OFF
-                        </span>
-                      )}
-                    </div>
-                    <div className="p-3 sm:p-4">
-                      {product.category && (
-                        <p className="text-[10px] text-gray-400 uppercase tracking-wider">
-                          {product.category.name}
-                        </p>
-                      )}
-                      <h3 className="font-medium text-gray-900 text-sm line-clamp-1 mt-0.5">
-                        {product.name}
-                      </h3>
-                      <div className="flex items-center gap-2 mt-2">
-                        <span className="font-bold text-gray-900">
-                          ₹{(product.price / 100).toFixed(0)}
-                        </span>
-                        {product.compareAt && product.compareAt > product.price && (
-                          <span className="text-xs text-gray-400 line-through">
-                            ₹{(product.compareAt / 100).toFixed(0)}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  </Link>
-                );
-              })}
-            </div>
-          </div>
-        </section>
-      )}
-
-      {/* Testimonials - Scrolling Marquee like reference */}
+      {/* Testimonials - Like reference with verified badges */}
       <section className="py-14 sm:py-20 md:py-24 bg-gray-50 overflow-hidden">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 mb-10">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-10">
           <div className="text-center">
             <h2 className="text-2xl sm:text-3xl font-bold text-gray-900">
               What Our Customers Say
             </h2>
+            <p className="text-gray-500 mt-3 text-sm">
+              Based on 8 verified reviews
+            </p>
           </div>
         </div>
         <div className="relative">
@@ -311,21 +311,31 @@ export default async function HomePage() {
               >
                 <div className="flex gap-0.5 mb-3">
                   {Array.from({ length: review.rating }).map((_, j) => (
-                    <span key={j} className="text-yellow-400 text-sm">★</span>
+                    <Star key={j} className="w-4 h-4 fill-yellow-400 text-yellow-400" />
                   ))}
                   {Array.from({ length: 5 - review.rating }).map((_, j) => (
-                    <span key={j} className="text-gray-200 text-sm">★</span>
+                    <Star key={j} className="w-4 h-4 text-gray-200" />
                   ))}
                 </div>
                 <p className="text-gray-600 text-sm leading-relaxed mb-4">
                   &ldquo;{review.text}&rdquo;
                 </p>
+                <div className="text-xs text-gray-400 mb-3">
+                  for <span className="font-medium text-gray-600">{review.product}</span>
+                </div>
                 <div className="flex items-center gap-3">
                   <div className="w-9 h-9 bg-blue-600 text-white rounded-full flex items-center justify-center text-sm font-bold">
                     {review.name[0]}
                   </div>
                   <div>
-                    <p className="text-sm font-semibold text-gray-900">{review.name}</p>
+                    <div className="flex items-center gap-2">
+                      <p className="text-sm font-semibold text-gray-900">{review.name}</p>
+                      {review.verified && (
+                        <span className="text-[10px] bg-green-100 text-green-700 px-1.5 py-0.5 rounded font-medium">
+                          Verified
+                        </span>
+                      )}
+                    </div>
                     <p className="text-xs text-gray-400">{review.location}</p>
                   </div>
                 </div>
@@ -335,20 +345,42 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* Free Delivery CTA - matches reference banner style */}
-      <section className="py-14 sm:py-20 bg-gray-100">
+      {/* Share & Get Discount - Like reference */}
+      <section className="py-14 sm:py-16 bg-white">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-3">
-            Free Delivery on Orders Above ₹499
+            Love GT Shop?
           </h2>
-          <p className="text-gray-500 mb-8">
-            We ship across India. Made with care, delivered to your doorstep.
+          <p className="text-gray-500 mb-6">
+            Share with friends & they get 20% off!
+          </p>
+          <div className="flex justify-center gap-4">
+            <button className="flex items-center gap-2 bg-green-500 text-white px-6 py-3 rounded-lg font-semibold hover:bg-green-600 transition-colors text-sm">
+              <Share2 className="w-4 h-4" />
+              WhatsApp
+            </button>
+            <button className="flex items-center gap-2 bg-gray-100 text-gray-700 px-6 py-3 rounded-lg font-semibold hover:bg-gray-200 transition-colors text-sm">
+              <Copy className="w-4 h-4" />
+              Copy Link
+            </button>
+          </div>
+        </div>
+      </section>
+
+      {/* Coupon Banner - Like reference */}
+      <section className="py-14 sm:py-20 bg-gradient-to-r from-blue-600 to-indigo-600">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <h2 className="text-2xl sm:text-3xl font-bold text-white mb-3">
+            Flat 20% OFF on Your First Order
+          </h2>
+          <p className="text-blue-100 mb-6">
+            Use code: <span className="font-mono font-bold text-white">GTSHOP20</span>
           </p>
           <Link
             href="/products"
-            className="inline-block bg-blue-600 text-white px-10 py-3.5 font-semibold hover:bg-blue-700 transition-colors text-sm tracking-wide uppercase"
+            className="inline-block bg-white text-blue-600 px-10 py-3.5 font-semibold hover:bg-gray-100 transition-colors text-sm tracking-wide"
           >
-            Order Now
+            Shop Now →
           </Link>
         </div>
       </section>

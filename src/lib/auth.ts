@@ -9,6 +9,7 @@ declare module "next-auth" {
       id: string;
       name: string | null;
       email: string | null;
+      phone: string | null;
       image: string | null;
       role: string;
     };
@@ -22,6 +23,7 @@ declare module "next-auth/jwt" {
   interface JWT {
     id: string;
     role: string;
+    phone: string | null;
   }
 }
 
@@ -30,21 +32,26 @@ export const authOptions: NextAuthOptions = {
     CredentialsProvider({
       name: "credentials",
       credentials: {
-        email: { label: "Email", type: "email" },
-        password: { label: "Password", type: "password" },
+        phone: { label: "Phone", type: "text" },
+        otpVerified: { label: "OTP Verified", type: "text" },
       },
       async authorize(credentials) {
-        if (!credentials?.email || !credentials?.password) return null;
+        if (!credentials?.phone || credentials.otpVerified !== "true") return null;
 
-        const user = await prisma.user.findUnique({
-          where: { email: credentials.email },
+        const phone = credentials.phone;
+
+        let user = await prisma.user.findUnique({
+          where: { phone },
         });
 
-        if (!user || !user.password) return null;
-
-        const isValid = await bcrypt.compare(credentials.password, user.password);
-
-        if (!isValid) return null;
+        if (!user) {
+          user = await prisma.user.create({
+            data: {
+              phone,
+              name: `User ${phone.slice(-4)}`,
+            },
+          });
+        }
 
         return {
           id: user.id,
