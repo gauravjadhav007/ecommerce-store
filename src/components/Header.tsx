@@ -56,7 +56,7 @@ export default function Header() {
 
           {/* Logo */}
           <Link href="/" className="flex-shrink-0">
-            <img src="/logo.png" alt="GT Shop" className="h-9 md:h-10 w-auto" />
+            <img src="/logo.png" alt="GT Shop" className="h-12 md:h-14 w-auto" />
           </Link>
 
           {/* Desktop nav */}
