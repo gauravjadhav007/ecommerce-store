@@ -44,12 +44,6 @@ export default async function HomePage() {
                 >
                   Shop Now
                 </Link>
-                <Link
-                  href="/digital-products"
-                  className="inline-block border border-white/30 text-white px-8 py-3.5 font-semibold hover:bg-white/10 transition-colors text-sm tracking-wide uppercase"
-                >
-                  Digital Products
-                </Link>
               </div>
             </div>
             <div className="hidden lg:flex justify-center">

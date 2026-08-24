@@ -66,7 +66,6 @@ export default function Header() {
             {[
               { href: "/", label: "Home" },
               { href: "/products", label: "Shop" },
-              { href: "/digital-products", label: "Digital Products" },
             ].map((link) => (
               <Link
                 key={link.href}
@@ -174,8 +173,6 @@ export default function Header() {
               {[
                 { href: "/", label: "Home" },
                 { href: "/products", label: "Shop" },
-                { href: "/digital-products", label: "Digital Products" },
-                { href: "/digital-products/starter-kit", label: "Starter Kit" },
               ].map((link) => (
                 <Link
                   key={link.href}
