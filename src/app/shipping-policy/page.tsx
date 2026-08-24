@@ -14,7 +14,7 @@ export default function ShippingPolicyPage() {
           <section>
             <h2 className="text-lg font-bold text-gray-900 mb-3">Free Shipping</h2>
             <p className="text-gray-600 leading-relaxed">
-              We offer free standard shipping on all orders above ₹999. Orders below ₹999 will incur a flat shipping fee of ₹49.
+              We offer free standard shipping on all orders above ₹499. Orders below ₹499 will incur a flat shipping fee of ₹49.
             </p>
           </section>
 
@@ -22,7 +22,7 @@ export default function ShippingPolicyPage() {
             <h2 className="text-lg font-bold text-gray-900 mb-3">Delivery Timelines</h2>
             <div className="bg-white rounded-xl border border-gray-200 divide-y divide-gray-100">
               {[
-                { type: "Standard Shipping", time: "5–7 business days", cost: "Free above ₹999 / ₹49 flat" },
+                { type: "Standard Shipping", time: "5–7 business days", cost: "Free above ₹499 / ₹49 flat" },
                 { type: "Express Shipping", time: "2–3 business days", cost: "₹149" },
                 { type: "Same-Day Delivery (Select Cities)", time: "Within 24 hours", cost: "₹199" },
               ].map((item) => (
