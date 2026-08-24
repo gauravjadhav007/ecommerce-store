@@ -49,7 +49,7 @@ export async function POST(req: NextRequest) {
         shippingName: name,
         shippingEmail: email,
         shippingPhone: phone || null,
-        shippingAddr: { type: "digital" },
+        shippingAddr: JSON.stringify({ type: "digital" }),
         status: "PROCESSING",
         userId,
         items: {

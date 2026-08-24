@@ -2,10 +2,9 @@
 
 import Link from "next/link";
 import { useCart } from "@/stores/cart";
-import { ShoppingBag, User, Menu, X, Search, ChevronRight, LogOut, Package, Shield, ShoppingBag as BagIcon } from "lucide-react";
+import { ShoppingBag, User, Menu, X, Search, ChevronRight, LogOut, Package, Shield } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import { useSession, signOut } from "next-auth/react";
-import Logo from "./Logo";
 
 export default function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -39,11 +38,11 @@ export default function Header() {
   return (
     <header className="sticky top-0 z-50 bg-white border-b border-gray-100 shadow-sm">
       {/* Top bar */}
-      <div className="hidden md:block bg-black text-white text-center text-xs py-1.5">
-        Digital Products for Small Businesses | Instant Download After Purchase
+      <div className="hidden md:block bg-black text-white text-center text-xs py-1.5 tracking-wide">
+        Free Delivery on Orders Above ₹499 | Secure Payments | Easy Returns
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-5 lg:px-8">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-14 md:h-16">
           {/* Mobile menu button */}
           <div className="flex items-center md:hidden">
@@ -57,20 +56,26 @@ export default function Header() {
 
           {/* Logo */}
           <Link href="/" className="flex-shrink-0">
-            <Logo size="sm" />
+            <span className="text-xl font-bold text-gray-900 tracking-tight">
+              GT<span className="text-blue-600">Shop</span>
+            </span>
           </Link>
 
           {/* Desktop nav */}
-          <nav className="hidden md:flex items-center gap-8">
-            <Link href="/" className="text-sm font-medium text-gray-700 hover:text-gray-900 transition-colors">
-              Home
-            </Link>
-            <Link href="/digital-products" className="text-sm font-medium text-gray-700 hover:text-gray-900 transition-colors">
-              Digital Products
-            </Link>
-            <Link href="/digital-products/starter-kit" className="text-sm font-medium text-gray-700 hover:text-gray-900 transition-colors">
-              Starter Kit
-            </Link>
+          <nav className="hidden md:flex items-center gap-7">
+            {[
+              { href: "/", label: "Home" },
+              { href: "/products", label: "Shop" },
+              { href: "/digital-products", label: "Digital Products" },
+            ].map((link) => (
+              <Link
+                key={link.href}
+                href={link.href}
+                className="text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors"
+              >
+                {link.label}
+              </Link>
+            ))}
           </nav>
 
           {/* Right icons */}
@@ -82,12 +87,11 @@ export default function Header() {
               <Search size={20} />
             </button>
 
-            {/* Account dropdown */}
             {session ? (
               <div ref={menuRef} className="relative">
                 <button
                   onClick={() => setAccountMenuOpen(!accountMenuOpen)}
-                  className="p-2 text-gray-600 hover:text-gray-900 flex items-center gap-1"
+                  className="p-2 text-gray-600 hover:text-gray-900"
                 >
                   <User size={20} />
                 </button>
@@ -137,7 +141,7 @@ export default function Header() {
             <Link href="/cart" className="p-2 text-gray-600 hover:text-gray-900 relative">
               <ShoppingBag size={20} />
               {itemCount > 0 && (
-                <span className="absolute -top-0.5 -right-0.5 bg-gray-900 text-white text-[10px] font-bold rounded-full min-w-[18px] h-[18px] flex items-center justify-center">
+                <span className="absolute -top-0.5 -right-0.5 bg-blue-600 text-white text-[10px] font-bold rounded-full min-w-[18px] h-[18px] flex items-center justify-center">
                   {itemCount}
                 </span>
               )}
@@ -155,20 +159,21 @@ export default function Header() {
                 name="search"
                 placeholder="Search for products..."
                 autoFocus
-                className="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+                className="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent"
               />
             </form>
           </div>
         )}
       </div>
 
-      {/* Mobile menu overlay */}
+      {/* Mobile menu */}
       {mobileMenuOpen && (
         <div className="fixed inset-0 top-[56px] bg-white z-50 overflow-y-auto md:hidden">
           <nav className="px-4 py-4">
             <div className="space-y-1">
               {[
                 { href: "/", label: "Home" },
+                { href: "/products", label: "Shop" },
                 { href: "/digital-products", label: "Digital Products" },
                 { href: "/digital-products/starter-kit", label: "Starter Kit" },
               ].map((link) => (

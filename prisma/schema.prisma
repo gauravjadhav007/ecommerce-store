@@ -4,7 +4,7 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "sqlite"
 }
 
 model User {
@@ -129,7 +129,7 @@ model Order {
   shippingName  String
   shippingEmail String
   shippingPhone String?
-  shippingAddr  Json
+  shippingAddr  String
   paymentIntent String?
   paidAt        DateTime?
   createdAt     DateTime    @default(now())

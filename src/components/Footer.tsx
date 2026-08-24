@@ -28,41 +28,28 @@ function FooterSection({ title, children }: { title: string; children: React.Rea
 export default function Footer() {
   return (
     <footer className="bg-gray-900 text-white">
-      <div className="max-w-5xl mx-auto px-4 sm:px-5 lg:px-8 py-10 md:py-14">
-        <div className="md:grid md:grid-cols-3 md:gap-8">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10 md:py-14">
+        <div className="md:grid md:grid-cols-4 md:gap-8">
           {/* Brand */}
           <div className="py-6 md:py-0 border-b border-gray-800 md:border-0 mb-6 md:mb-0">
-            <h3 className="text-xl font-bold mb-2">GT Shop</h3>
-            <p className="text-gray-400 text-sm leading-relaxed">
-              Ready-to-use templates, business tools and resources for creators and small businesses.
+            <Link href="/" className="inline-block">
+              <span className="text-xl font-bold text-white tracking-tight">
+                GT<span className="text-blue-400">Shop</span>
+              </span>
+            </Link>
+            <p className="text-gray-400 text-sm leading-relaxed mt-3">
+              Quality products at honest prices. Free delivery on orders above ₹499.
             </p>
           </div>
 
-          {/* Products */}
-          <FooterSection title="Products">
-            <ul className="space-y-2.5">
-              <li>
-                <Link href="/digital-products" className="text-gray-400 text-sm hover:text-white transition-colors">
-                  All Products
-                </Link>
-              </li>
-              <li>
-                <Link href="/digital-products/starter-kit" className="text-gray-400 text-sm hover:text-white transition-colors">
-                  Starter Kit
-                </Link>
-              </li>
-            </ul>
-          </FooterSection>
-
-          {/* Help */}
-          <FooterSection title="Help">
+          {/* Quick Links */}
+          <FooterSection title="Quick Links">
             <ul className="space-y-2.5">
               {[
-                { href: "/track-order", label: "Track Order" },
-                { href: "/shipping-policy", label: "Shipping Policy" },
-                { href: "/return-policy", label: "Return Policy" },
-                { href: "/privacy-policy", label: "Privacy Policy" },
-                { href: "/tc", label: "Terms & Conditions" },
+                { href: "/", label: "Home" },
+                { href: "/products", label: "Shop All" },
+                { href: "/digital-products", label: "Digital Products" },
+                { href: "/account", label: "My Account" },
               ].map((link, i) => (
                 <li key={i}>
                   <Link href={link.href} className="text-gray-400 text-sm hover:text-white transition-colors">
@@ -70,6 +57,37 @@ export default function Footer() {
                   </Link>
                 </li>
               ))}
+            </ul>
+          </FooterSection>
+
+          {/* Policies */}
+          <FooterSection title="Policies">
+            <ul className="space-y-2.5">
+              {[
+                { href: "/shipping-policy", label: "Shipping Policy" },
+                { href: "/return-policy", label: "Return Policy" },
+                { href: "/privacy-policy", label: "Privacy Policy" },
+                { href: "/tc", label: "Terms & Conditions" },
+                { href: "/track-order", label: "Track Order" },
+              ].map((link, i) => (
+                <li key={i}>
+                  <Link href={link.href} className="text-gray-400 text-sm hover:text-white transition-colors">
+                    {link.label}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </FooterSection>
+
+          {/* Get in Touch */}
+          <FooterSection title="Get in Touch">
+            <ul className="space-y-2.5">
+              <li className="text-gray-400 text-sm">support@gtshop.in</li>
+              <li>
+                <a href="/track-order" className="text-gray-400 text-sm hover:text-white transition-colors">
+                  Track Your Order
+                </a>
+              </li>
             </ul>
           </FooterSection>
         </div>

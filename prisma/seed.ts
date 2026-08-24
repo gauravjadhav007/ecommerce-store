@@ -1,11 +1,13 @@
 import { PrismaClient } from "../src/generated/prisma/client";
 import { PrismaBetterSqlite3 } from "@prisma/adapter-better-sqlite3";
+import bcrypt from "bcryptjs";
+import path from "path";
 
-const adapter = new PrismaBetterSqlite3({ url: "file:./dev.db" });
+const dbPath = path.join(process.cwd(), "dev.db");
+const adapter = new PrismaBetterSqlite3({ url: `file:${dbPath}` });
 const prisma = new PrismaClient({ adapter });
 
 async function main() {
-  // Clear existing data
   await prisma.orderItem.deleteMany();
   await prisma.order.deleteMany();
   await prisma.review.deleteMany();
@@ -17,80 +19,101 @@ async function main() {
   const clothing = await prisma.category.create({
     data: { name: "Clothing", slug: "clothing" },
   });
-
   const electronics = await prisma.category.create({
     data: { name: "Electronics", slug: "electronics" },
   });
-
   const accessories = await prisma.category.create({
     data: { name: "Accessories", slug: "accessories" },
   });
-
   const home = await prisma.category.create({
     data: { name: "Home & Kitchen", slug: "home-kitchen" },
   });
 
-  // Prices in paise (INR * 100)
+  const shirt = await prisma.product.create({
+    data: {
+      name: "Cotton Round Neck T-Shirt",
+      slug: "cotton-round-neck-tshirt",
+      description: "Premium 100% cotton round neck t-shirt. Comfortable for daily wear. Available in multiple colors.",
+      price: 49900,
+      compareAt: 79900,
+      images: JSON.stringify(["https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=800"]),
+      stock: 100,
+      sku: "CLK-001",
+      featured: true,
+      categoryId: clothing.id,
+    },
+  });
+  await prisma.variant.createMany({
+    data: [
+      { name: "S", price: 49900, stock: 25, productId: shirt.id },
+      { name: "M", price: 49900, stock: 30, productId: shirt.id },
+      { name: "L", price: 49900, stock: 25, productId: shirt.id },
+      { name: "XL", price: 54900, stock: 20, productId: shirt.id },
+    ],
+  });
+
+  const jeans = await prisma.product.create({
+    data: {
+      name: "Slim Fit Denim Jeans",
+      slug: "slim-fit-denim-jeans",
+      description: "Modern slim fit jeans with stretch comfort. Perfect for casual outings.",
+      price: 129900,
+      compareAt: 199900,
+      images: JSON.stringify(["https://images.unsplash.com/photo-1542272604-787c3835535d?w=800"]),
+      stock: 60,
+      sku: "CLK-002",
+      featured: true,
+      categoryId: clothing.id,
+    },
+  });
+  await prisma.variant.createMany({
+    data: [
+      { name: "28", price: 129900, stock: 15, productId: jeans.id },
+      { name: "30", price: 129900, stock: 20, productId: jeans.id },
+      { name: "32", price: 129900, stock: 15, productId: jeans.id },
+      { name: "34", price: 129900, stock: 10, productId: jeans.id },
+    ],
+  });
+
+  const headphones = await prisma.product.create({
+    data: {
+      name: "Wireless Bluetooth Headphones",
+      slug: "wireless-bluetooth-headphones",
+      description: "Premium wireless headphones with active noise cancellation. 30-hour battery life. Deep bass sound.",
+      price: 199900,
+      compareAt: 349900,
+      images: JSON.stringify(["https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=800"]),
+      stock: 35,
+      sku: "ELC-001",
+      featured: true,
+      categoryId: electronics.id,
+    },
+  });
+
+  const smartwatch = await prisma.product.create({
+    data: {
+      name: "Smart Watch Pro",
+      slug: "smart-watch-pro",
+      description: "Feature-rich smartwatch with health tracking, GPS, and notifications. Water resistant.",
+      price: 499900,
+      compareAt: 799900,
+      images: JSON.stringify(["https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=800"]),
+      stock: 25,
+      sku: "ELC-002",
+      featured: true,
+      categoryId: electronics.id,
+    },
+  });
+  await prisma.variant.createMany({
+    data: [
+      { name: "Black", price: 499900, stock: 10, productId: smartwatch.id },
+      { name: "Silver", price: 499900, stock: 10, productId: smartwatch.id },
+      { name: "Rose Gold", price: 529900, stock: 5, productId: smartwatch.id },
+    ],
+  });
+
   await prisma.product.createMany({
     data: [
-      {
-        name: "Cotton Round Neck T-Shirt",
-        slug: "cotton-round-neck-tshirt",
-        description: "Premium 100% cotton round neck t-shirt. Comfortable for daily wear. Available in multiple colors.",
-        price: 49900,
-        compareAt: 79900,
-        images: JSON.stringify(["https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=800"]),
-        stock: 100,
-        sku: "CLK-001",
-        featured: true,
-        categoryId: clothing.id,
-      },
-      {
-        name: "Slim Fit Denim Jeans",
-        slug: "slim-fit-denim-jeans",
-        description: "Modern slim fit jeans with stretch comfort. Perfect for casual outings.",
-        price: 129900,
-        compareAt: 199900,
-        images: JSON.stringify(["https://images.unsplash.com/photo-1542272604-787c3835535d?w=800"]),
-        stock: 60,
-        sku: "CLK-002",
-        featured: true,
-        categoryId: clothing.id,
-      },
-      {
-        name: "Formal White Shirt",
-        slug: "formal-white-shirt",
-        description: "Classic formal white shirt for office and events. Wrinkle-free fabric.",
-        price: 89900,
-        images: JSON.stringify(["https://images.unsplash.com/photo-1596755094514-f87e34085b2c?w=800"]),
-        stock: 45,
-        sku: "CLK-003",
-        categoryId: clothing.id,
-      },
-      {
-        name: "Wireless Bluetooth Headphones",
-        slug: "wireless-bluetooth-headphones",
-        description: "Premium wireless headphones with active noise cancellation. 30-hour battery life. Deep bass sound.",
-        price: 199900,
-        compareAt: 349900,
-        images: JSON.stringify(["https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=800"]),
-        stock: 35,
-        sku: "ELC-001",
-        featured: true,
-        categoryId: electronics.id,
-      },
-      {
-        name: "Smart Watch Pro",
-        slug: "smart-watch-pro",
-        description: "Feature-rich smartwatch with health tracking, GPS, and notifications. Water resistant.",
-        price: 499900,
-        compareAt: 799900,
-        images: JSON.stringify(["https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=800"]),
-        stock: 25,
-        sku: "ELC-002",
-        featured: true,
-        categoryId: electronics.id,
-      },
       {
         name: "Portable Bluetooth Speaker",
         slug: "portable-bluetooth-speaker",
@@ -173,27 +196,27 @@ async function main() {
     ],
   });
 
-  // Create admin user (password: admin123)
+  const adminHash = await bcrypt.hash("admin123", 12);
   await prisma.user.create({
     data: {
       name: "Gaurav Jadhav",
       email: "admin@gtshop.in",
-      password: "$2b$12$yKgsqnqVST1r6JdhHawB9.YDG1jJy4O08q0Bojb32SvzmXzbjL1QK",
+      password: adminHash,
       role: "ADMIN",
     },
   });
 
-  // Create test customer (password: test123)
+  const customerHash = await bcrypt.hash("test123", 12);
   await prisma.user.create({
     data: {
       name: "Test Customer",
       email: "customer@test.com",
-      password: "$2b$12$yKgsqnqVST1r6JdhHawB9.YDG1jJy4O08q0Bojb32SvzmXzbjL1QK",
+      password: customerHash,
       role: "CUSTOMER",
     },
   });
 
-  console.log("Database seeded with Indian pricing!");
+  console.log("Database seeded successfully!");
 }
 
 main()

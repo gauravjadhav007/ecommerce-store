@@ -55,7 +55,7 @@ export async function POST(req: NextRequest) {
         shippingName: name || "Customer",
         shippingEmail: email || "",
         shippingPhone: phone || null,
-        shippingAddr: { type: "digital" },
+        shippingAddr: JSON.stringify({ type: "digital" }),
         paymentIntent: razorpay_payment_id,
         status: "PROCESSING",
         userId,

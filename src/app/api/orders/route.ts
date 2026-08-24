@@ -77,7 +77,7 @@ export async function POST(req: NextRequest) {
         shippingName: shipping.name,
         shippingEmail: shipping.email,
         shippingPhone: shipping.phone || null,
-        shippingAddr: shipping as unknown as Record<string, string>,
+        shippingAddr: JSON.stringify(shipping),
         userId,
         items: {
           create: validItems.map(({ item, product }) => ({
