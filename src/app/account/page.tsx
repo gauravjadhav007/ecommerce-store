@@ -1,20 +1,30 @@
 "use client";
 
-import { useSession, signOut } from "next-auth/react";
+import { useSession, signOut, getSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
-import { User, Package, ShoppingBag, LogOut, Shield, Settings } from "lucide-react";
+import { User, Package, ShoppingBag, LogOut, Shield, Settings, Pencil, Check, X } from "lucide-react";
 
 export default function AccountPage() {
-  const { data: session, status } = useSession();
+  const { data: session, status, update } = useSession();
   const router = useRouter();
+  const [editingName, setEditingName] = useState(false);
+  const [nameValue, setNameValue] = useState("");
+  const [savingName, setSavingName] = useState(false);
+  const [nameError, setNameError] = useState("");
 
   useEffect(() => {
     if (status === "unauthenticated") {
       router.push("/login");
     }
   }, [status, router]);
+
+  useEffect(() => {
+    if (session?.user?.name) {
+      setNameValue(session.user.name);
+    }
+  }, [session]);
 
   if (status === "loading") {
     return (
@@ -27,6 +37,33 @@ export default function AccountPage() {
   if (!session) return null;
 
   const isAdmin = session.user?.role === "ADMIN";
+
+  const handleSaveName = async () => {
+    setNameError("");
+    if (nameValue.trim().length < 2) {
+      setNameError("Name must be at least 2 characters");
+      return;
+    }
+    setSavingName(true);
+    try {
+      const res = await fetch("/api/user/profile", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: nameValue.trim() }),
+      });
+      if (!res.ok) {
+        const data = await res.json();
+        setNameError(data.error || "Failed to update");
+        return;
+      }
+      await update();
+      setEditingName(false);
+    } catch {
+      setNameError("Something went wrong");
+    } finally {
+      setSavingName(false);
+    }
+  };
 
   return (
     <div className="max-w-2xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
@@ -49,8 +86,49 @@ export default function AccountPage() {
         <div className="border-t border-gray-100 pt-4 space-y-3">
           <div className="flex items-center justify-between text-sm">
             <span className="text-gray-500">Name</span>
-            <span className="font-medium text-gray-900">{session.user?.name || "N/A"}</span>
+            {editingName ? (
+              <div className="flex items-center gap-2">
+                <input
+                  type="text"
+                  value={nameValue}
+                  onChange={(e) => setNameValue(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && handleSaveName()}
+                  className="w-40 px-2 py-1 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-gray-900"
+                  autoFocus
+                />
+                <button
+                  onClick={handleSaveName}
+                  disabled={savingName}
+                  className="text-green-600 hover:text-green-700 disabled:opacity-50"
+                >
+                  <Check size={16} />
+                </button>
+                <button
+                  onClick={() => {
+                    setEditingName(false);
+                    setNameValue(session.user?.name || "");
+                    setNameError("");
+                  }}
+                  className="text-gray-400 hover:text-gray-600"
+                >
+                  <X size={16} />
+                </button>
+              </div>
+            ) : (
+              <div className="flex items-center gap-2">
+                <span className="font-medium text-gray-900">{session.user?.name || "N/A"}</span>
+                <button
+                  onClick={() => setEditingName(true)}
+                  className="text-gray-400 hover:text-gray-600"
+                >
+                  <Pencil size={14} />
+                </button>
+              </div>
+            )}
           </div>
+          {nameError && (
+            <p className="text-xs text-red-500 text-right">{nameError}</p>
+          )}
           <div className="flex items-center justify-between text-sm">
             <span className="text-gray-500">Email</span>
             <span className="font-medium text-gray-900">{session.user?.email}</span>

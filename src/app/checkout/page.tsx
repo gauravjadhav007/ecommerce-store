@@ -12,6 +12,7 @@ export default function CheckoutPage() {
   const { data: session } = useSession();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [pincodeLoading, setPincodeLoading] = useState(false);
   const total = getTotal();
 
   const [form, setForm] = useState({
@@ -38,6 +39,28 @@ export default function CheckoutPage() {
       }));
     }
   }, [session]);
+
+  const fetchPincode = async (pincode: string) => {
+    if (pincode.length !== 6) return;
+    setPincodeLoading(true);
+    try {
+      const res = await fetch(`https://api.postalpincode.in/pincode/${pincode}`);
+      const data = await res.json();
+      if (data[0].Status === "Success" && data[0].PostOffice?.length > 0) {
+        const po = data[0].PostOffice[0];
+        setForm((prev) => ({
+          ...prev,
+          city: po.District || po.Name,
+          state: po.State,
+          country: "IN",
+        }));
+      }
+    } catch {
+      // ignore — user can fill manually
+    } finally {
+      setPincodeLoading(false);
+    }
+  };
 
   if (items.length === 0) {
     return (
@@ -167,10 +190,29 @@ export default function CheckoutPage() {
                     className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 min-h-[44px] text-sm sm:text-base"
                   />
                 </div>
+                <div>
+                  <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1">
+                    PIN Code
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    maxLength={6}
+                    pattern="[0-9]{6}"
+                    placeholder="e.g. 400001"
+                    value={form.zip}
+                    onChange={(e) => {
+                      const val = e.target.value.replace(/\D/g, "").slice(0, 6);
+                      setForm({ ...form, zip: val });
+                      if (val.length === 6) fetchPincode(val);
+                    }}
+                    className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 min-h-[44px] text-sm sm:text-base"
+                  />
+                </div>
                 <div className="grid grid-cols-2 gap-3 sm:gap-4">
                   <div>
                     <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1">
-                      City
+                      City {pincodeLoading && <span className="text-gray-400 text-xs">(fetching...)</span>}
                     </label>
                     <input
                       type="text"
@@ -182,7 +224,7 @@ export default function CheckoutPage() {
                   </div>
                   <div>
                     <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1">
-                      State
+                      State {pincodeLoading && <span className="text-gray-400 text-xs">(fetching...)</span>}
                     </label>
                     <input
                       type="text"
@@ -191,35 +233,6 @@ export default function CheckoutPage() {
                       onChange={(e) => setForm({ ...form, state: e.target.value })}
                       className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 min-h-[44px] text-sm sm:text-base"
                     />
-                  </div>
-                </div>
-                <div className="grid grid-cols-2 gap-3 sm:gap-4">
-                  <div>
-                    <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1">
-                      ZIP Code
-                    </label>
-                    <input
-                      type="text"
-                      required
-                      value={form.zip}
-                      onChange={(e) => setForm({ ...form, zip: e.target.value })}
-                      className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 min-h-[44px] text-sm sm:text-base"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1">
-                      Country
-                    </label>
-                    <select
-                      value={form.country}
-                      onChange={(e) => setForm({ ...form, country: e.target.value })}
-                      className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 min-h-[44px] text-sm sm:text-base"
-                    >
-                      <option value="IN">India</option>
-                      <option value="US">United States</option>
-                      <option value="CA">Canada</option>
-                      <option value="UK">United Kingdom</option>
-                    </select>
                   </div>
                 </div>
               </div>
