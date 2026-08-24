@@ -1,31 +1,34 @@
-// Simple in-memory OTP store for development
-// In production, use Redis or database
+import prisma from "./prisma";
 
-interface OtpEntry {
-  code: string;
-  expires: number;
-}
-
-const otpStore = new Map<string, OtpEntry>();
-
-export function generateOtp(phone: string): string {
+export async function generateOtp(phone: string): Promise<string> {
   const code = Math.floor(100000 + Math.random() * 900000).toString();
-  otpStore.set(phone, {
-    code,
-    expires: Date.now() + 5 * 60 * 1000, // 5 minutes
+  
+  await prisma.otp.deleteMany({ where: { phone } });
+
+  await prisma.otp.create({
+    data: {
+      phone,
+      code,
+      expires: new Date(Date.now() + 5 * 60 * 1000),
+    },
   });
+
   console.log(`[OTP] ${phone} -> ${code}`);
   return code;
 }
 
-export function verifyOtp(phone: string, code: string): boolean {
-  const entry = otpStore.get(phone);
+export async function verifyOtp(phone: string, code: string): Promise<boolean> {
+  const entry = await prisma.otp.findFirst({
+    where: { phone, code },
+    orderBy: { createdAt: "desc" },
+  });
+
   if (!entry) return false;
-  if (Date.now() > entry.expires) {
-    otpStore.delete(phone);
+  if (Date.now() > entry.expires.getTime()) {
+    await prisma.otp.delete({ where: { id: entry.id } });
     return false;
   }
-  if (entry.code !== code) return false;
-  otpStore.delete(phone);
+
+  await prisma.otp.deleteMany({ where: { phone } });
   return true;
 }

@@ -195,3 +195,14 @@ enum OrderStatus {
   DELIVERED
   CANCELLED
 }
+
+model Otp {
+  id        String   @id @default(cuid())
+  phone     String
+  code      String
+  expires   DateTime
+  createdAt DateTime @default(now())
+
+  @@index([phone])
+  @@map("otps")
+}

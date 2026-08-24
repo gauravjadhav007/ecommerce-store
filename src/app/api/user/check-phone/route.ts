@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { generateOtp } from "@/lib/otp";
+import prisma from "@/lib/prisma";
 
 export async function POST(req: NextRequest) {
   try {
@@ -12,16 +12,20 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const code = await generateOtp(phone);
+    const user = await prisma.user.findUnique({
+      where: { phone },
+      select: { id: true, firstName: true, lastName: true, email: true },
+    });
 
     return NextResponse.json({
-      success: true,
-      message: `OTP sent to ${phone}`,
-      otp: code,
+      exists: !!user,
+      user: user
+        ? { firstName: user.firstName, lastName: user.lastName, email: user.email }
+        : null,
     });
   } catch {
     return NextResponse.json(
-      { error: "Failed to send OTP" },
+      { error: "Failed to check phone" },
       { status: 500 }
     );
   }

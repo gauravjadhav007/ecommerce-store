@@ -12,7 +12,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const valid = verifyOtp(phone, code);
+    const valid = await verifyOtp(phone, code);
     if (!valid) {
       return NextResponse.json(
         { error: "Invalid or expired OTP" },

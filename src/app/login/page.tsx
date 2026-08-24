@@ -4,7 +4,7 @@ import Link from "next/link";
 import { signIn } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState, Suspense } from "react";
-import { AlertTriangle, Phone, KeyRound, ArrowLeft } from "lucide-react";
+import { AlertTriangle, Phone, KeyRound, ArrowLeft, UserPlus } from "lucide-react";
 
 function LoginForm() {
   const router = useRouter();
@@ -13,11 +13,15 @@ function LoginForm() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const [step, setStep] = useState<"phone" | "otp">("phone");
+  const [step, setStep] = useState<"phone" | "otp" | "register">("phone");
   const [phone, setPhone] = useState("");
   const [otp, setOtp] = useState("");
-  const [otpSent, setOtpSent] = useState(false);
   const [otpCode, setOtpCode] = useState("");
+  const [isNewUser, setIsNewUser] = useState(false);
+
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [email, setEmail] = useState("");
 
   const isCartRedirect = callbackUrl === "/cart";
   const isCheckoutRedirect = callbackUrl === "/checkout";
@@ -34,6 +38,14 @@ function LoginForm() {
     }
 
     try {
+      const phoneRes = await fetch("/api/user/check-phone", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ phone }),
+      });
+      const phoneData = await phoneRes.json();
+      setIsNewUser(!phoneData.exists);
+
       const res = await fetch("/api/otp/send", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -48,7 +60,6 @@ function LoginForm() {
       }
 
       setOtpCode(data.otp);
-      setOtpSent(true);
       setStep("otp");
     } catch {
       setError("Something went wrong");
@@ -78,6 +89,57 @@ function LoginForm() {
 
       if (!res.ok) {
         setError(data.error || "Invalid OTP");
+        setLoading(false);
+        return;
+      }
+
+      if (isNewUser) {
+        setStep("register");
+        setLoading(false);
+        return;
+      }
+
+      const result = await signIn("credentials", {
+        phone,
+        otpVerified: "true",
+        redirect: false,
+      });
+
+      if (result?.error) {
+        setError(`Login failed: ${result.error}`);
+        setLoading(false);
+      } else {
+        router.push(callbackUrl);
+        router.refresh();
+      }
+    } catch {
+      setError("Something went wrong");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleRegister = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setError("");
+
+    if (!firstName.trim()) {
+      setError("First name is required");
+      setLoading(false);
+      return;
+    }
+
+    try {
+      const res = await fetch("/api/user/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ phone, firstName: firstName.trim(), lastName: lastName.trim(), email: email.trim() }),
+      });
+      const data = await res.json();
+
+      if (!res.ok) {
+        setError(data.error || "Registration failed");
         setLoading(false);
         return;
       }
@@ -119,12 +181,14 @@ function LoginForm() {
       )}
 
       <h1 className="text-xl sm:text-2xl font-bold text-center mb-2">
-        {step === "phone" ? "Sign In" : "Enter OTP"}
+        {step === "phone" && "Sign In"}
+        {step === "otp" && "Enter OTP"}
+        {step === "register" && "Complete Registration"}
       </h1>
       <p className="text-center text-gray-500 text-xs sm:text-sm mb-6 sm:mb-8">
-        {step === "phone"
-          ? "Enter your mobile number to get started"
-          : `OTP sent to +91 ${phone}`}
+        {step === "phone" && "Enter your mobile number to get started"}
+        {step === "otp" && `OTP sent to +91 ${phone}`}
+        {step === "register" && "Enter your details to create account"}
       </p>
 
       {error && (
@@ -133,7 +197,7 @@ function LoginForm() {
         </div>
       )}
 
-      {step === "phone" ? (
+      {step === "phone" && (
         <form onSubmit={handleSendOtp} className="space-y-3 sm:space-y-4">
           <div>
             <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1">
@@ -163,7 +227,9 @@ function LoginForm() {
             {loading ? "Sending OTP..." : "Send OTP"}
           </button>
         </form>
-      ) : (
+      )}
+
+      {step === "otp" && (
         <form onSubmit={handleVerifyOtp} className="space-y-3 sm:space-y-4">
           <div>
             <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1">
@@ -180,7 +246,6 @@ function LoginForm() {
                 className="w-full px-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600 text-center text-lg tracking-[0.5em] font-mono"
               />
             </div>
-            {/* DEV ONLY: show OTP for testing */}
             {otpCode && (
               <p className="text-center text-xs text-gray-400 mt-2">
                 Dev OTP: <span className="font-mono font-bold text-gray-600">{otpCode}</span>
@@ -194,7 +259,7 @@ function LoginForm() {
             className="w-full bg-blue-600 text-white py-2.5 sm:py-3 rounded-lg hover:bg-blue-700 disabled:opacity-50 min-h-[44px] text-sm sm:text-base font-medium flex items-center justify-center gap-2"
           >
             <KeyRound className="w-4 h-4" />
-            {loading ? "Verifying..." : "Verify & Sign In"}
+            {loading ? "Verifying..." : "Verify OTP"}
           </button>
 
           <button
@@ -202,7 +267,7 @@ function LoginForm() {
             onClick={() => {
               setStep("phone");
               setOtp("");
-              setOtpSent(false);
+              setOtpCode("");
               setError("");
             }}
             className="w-full text-gray-500 py-2 text-sm font-medium flex items-center justify-center gap-1 hover:text-gray-700"
@@ -218,6 +283,76 @@ function LoginForm() {
             className="w-full text-blue-600 py-2 text-sm font-medium hover:underline"
           >
             Resend OTP
+          </button>
+        </form>
+      )}
+
+      {step === "register" && (
+        <form onSubmit={handleRegister} className="space-y-3 sm:space-y-4">
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1">
+                First Name *
+              </label>
+              <input
+                type="text"
+                value={firstName}
+                onChange={(e) => setFirstName(e.target.value)}
+                required
+                placeholder="First name"
+                className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600 min-h-[44px] text-sm"
+              />
+            </div>
+            <div>
+              <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1">
+                Last Name
+              </label>
+              <input
+                type="text"
+                value={lastName}
+                onChange={(e) => setLastName(e.target.value)}
+                placeholder="Last name"
+                className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600 min-h-[44px] text-sm"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1">
+              Email Address
+            </label>
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="email@example.com"
+              className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600 min-h-[44px] text-sm"
+            />
+          </div>
+
+          <div className="bg-gray-50 border border-gray-200 rounded-lg p-3 text-sm text-gray-600">
+            Phone: +91 {phone}
+          </div>
+
+          <button
+            type="submit"
+            disabled={loading || !firstName.trim()}
+            className="w-full bg-blue-600 text-white py-2.5 sm:py-3 rounded-lg hover:bg-blue-700 disabled:opacity-50 min-h-[44px] text-sm sm:text-base font-medium flex items-center justify-center gap-2"
+          >
+            <UserPlus className="w-4 h-4" />
+            {loading ? "Creating Account..." : "Create Account & Sign In"}
+          </button>
+
+          <button
+            type="button"
+            onClick={() => {
+              setStep("otp");
+              setError("");
+            }}
+            className="w-full text-gray-500 py-2 text-sm font-medium flex items-center justify-center gap-1 hover:text-gray-700"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            Back to OTP
           </button>
         </form>
       )}
