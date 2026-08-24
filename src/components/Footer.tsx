@@ -33,9 +33,7 @@ export default function Footer() {
           {/* Brand */}
           <div className="py-6 md:py-0 border-b border-gray-800 md:border-0 mb-6 md:mb-0">
             <Link href="/" className="inline-block">
-              <span className="text-xl font-bold text-white tracking-tight">
-                GT<span className="text-blue-400">Shop</span>
-              </span>
+              <img src="/logo.png" alt="GT Shop" className="h-9 w-auto brightness-0 invert" />
             </Link>
             <p className="text-gray-400 text-sm leading-relaxed mt-3">
               Quality products at honest prices. Free delivery on orders above ₹499.
