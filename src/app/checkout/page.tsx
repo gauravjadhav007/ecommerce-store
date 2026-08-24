@@ -25,12 +25,16 @@ export default function CheckoutPage() {
     country: "IN",
   });
 
+  const shipping = total >= 49900 ? 0 : 4900;
+  const grandTotal = total + shipping;
+
   useEffect(() => {
     if (session?.user) {
       setForm((prev) => ({
         ...prev,
         name: prev.name || session.user.name || "",
         email: prev.email || session.user.email || "",
+        phone: prev.phone || "",
       }));
     }
   }, [session]);
@@ -124,11 +128,10 @@ export default function CheckoutPage() {
                 </div>
                 <div>
                   <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1">
-                    Email
+                    Email (optional)
                   </label>
                   <input
                     type="email"
-                    required
                     value={form.email}
                     onChange={(e) => setForm({ ...form, email: e.target.value })}
                     className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 min-h-[44px] text-sm sm:text-base"
@@ -247,11 +250,18 @@ export default function CheckoutPage() {
                 </div>
                 <div className="flex justify-between text-xs sm:text-sm">
                   <span className="text-gray-600">Shipping</span>
-                  <span className="text-green-600">Free</span>
+                  <span className={shipping === 0 ? "text-green-600" : ""}>
+                    {shipping === 0 ? "Free" : `₹${(shipping / 100).toFixed(0)}`}
+                  </span>
                 </div>
+                {shipping > 0 && (
+                  <p className="text-[11px] text-blue-600">
+                    Add ₹{((49900 - total) / 100).toFixed(0)} more for free shipping
+                  </p>
+                )}
                 <div className="flex justify-between font-semibold text-base sm:text-lg border-t border-gray-200 pt-2 sm:pt-3">
                   <span>Total</span>
-                  <span>₹{(total / 100).toFixed(0)}</span>
+                  <span>₹{(grandTotal / 100).toFixed(0)}</span>
                 </div>
               </div>
               <button

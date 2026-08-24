@@ -8,6 +8,9 @@ export default function CartPage() {
   const { items, removeItem, updateQuantity, getTotal, clearCart } = useCart();
   const total = getTotal();
 
+  const shipping = total >= 49900 ? 0 : 4900;
+  const grandTotal = total + shipping;
+
   if (items.length === 0) {
     return (
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16 text-center">
@@ -128,11 +131,18 @@ export default function CartPage() {
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-600">Shipping</span>
-                <span className="text-green-600">Free</span>
+                <span className={shipping === 0 ? "text-green-600" : ""}>
+                  {shipping === 0 ? "Free" : `₹${(shipping / 100).toFixed(0)}`}
+                </span>
               </div>
+              {shipping > 0 && (
+                <p className="text-[11px] text-blue-600">
+                  Add ₹{((49900 - total) / 100).toFixed(0)} more for free shipping
+                </p>
+              )}
               <div className="border-t border-gray-200 pt-2 sm:pt-3 flex justify-between font-semibold text-base sm:text-lg">
                 <span>Total</span>
-                <span>₹{(total / 100).toFixed(0)}</span>
+                <span>₹{(grandTotal / 100).toFixed(0)}</span>
               </div>
             </div>
             <Link

@@ -7,14 +7,14 @@ import { Check, Zap, ArrowRight, Share2, Copy, Star } from "lucide-react";
 export const dynamic = "force-dynamic";
 
 const reviews = [
-  { name: "Priya Sharma", location: "Mumbai", rating: 5, text: "Finally found products that actually taste amazing! My absolute favorite. The quality is unmatched.", verified: true, product: "Premium Cotton T-Shirt" },
-  { name: "Rahul Verma", location: "Delhi", rating: 4, text: "Great products! Perfect fit and finish. The material feels premium. Great value for money.", verified: true, product: "Wireless Earbuds Pro" },
-  { name: "Anjali Patel", location: "Bangalore", rating: 5, text: "Love the quality! Ordered 5 packs already. The originals are pure comfort. My whole family is hooked!", verified: true, product: "Organic Cotton Hoodie" },
-  { name: "Sneha Gupta", location: "Pune", rating: 5, text: "Best online shopping I've ever had. The quality is unreal. Delivery was super fast too!", verified: false, product: "Slim Fit Jeans" },
-  { name: "Arjun Mehta", location: "Hyderabad", rating: 5, text: "Bought this for a party. Everyone asked where to buy. Now I'm the go-to guy for recommendations!", verified: true, product: "Classic Polo Shirt" },
-  { name: "Kavita Reddy", location: "Chennai", rating: 4, text: "Good quality and the packaging is top notch. The fabric feels premium and comfortable.", verified: true, product: "Running Shoes" },
-  { name: "Rohan Singh", location: "Jaipur", rating: 4, text: "Delivery took a bit longer than expected, but the product was fresh and well packed.", verified: false, product: "Denim Jacket" },
-  { name: "Meera Iyer", location: "Kochi", rating: 5, text: "My go-to for gifting. Pure and clean, exactly what I was looking for. Highly recommend!", verified: true, product: "Casual Sneakers" },
+  { name: "Priya Sharma", location: "Mumbai", rating: 5, text: "The fabric quality is incredible! Super soft and comfortable. My absolute favorite t-shirt now.", verified: true, product: "Cotton Round Neck T-Shirt" },
+  { name: "Rahul Verma", location: "Delhi", rating: 4, text: "Great sound quality and the noise cancellation really works. Battery lasts all day. Worth every rupee.", verified: true, product: "Wireless Bluetooth Headphones" },
+  { name: "Anjali Patel", location: "Bangalore", rating: 5, text: "Love the slim fit! Ordered 2 more in different colors. The stretch comfort is amazing. My whole family loves them!", verified: true, product: "Slim Fit Denim Jeans" },
+  { name: "Sneha Gupta", location: "Pune", rating: 5, text: "Best online shopping I've ever had. The watch looks premium and the health tracking features are accurate. Delivery was super fast!", verified: false, product: "Smart Watch Pro" },
+  { name: "Arjun Mehta", location: "Hyderabad", rating: 5, text: "Bought this bag for my wife. She absolutely loved it! The leather quality is genuine and the craftsmanship is excellent.", verified: true, product: "Leather Crossbody Bag" },
+  { name: "Kavita Reddy", location: "Chennai", rating: 4, text: "Good quality cookware. The non-stick coating works well and it's easy to clean. PFOA free is a big plus.", verified: true, product: "Non-Stick Cookware Set" },
+  { name: "Rohan Singh", location: "Jaipur", rating: 4, text: "Delivery took a bit longer than expected, but the speaker sound quality is fantastic. Great bass for its size.", verified: false, product: "Portable Bluetooth Speaker" },
+  { name: "Meera Iyer", location: "Kochi", rating: 5, text: "Perfect for daily runs! Lightweight, great cushioning, and the breathable mesh keeps my feet cool. Highly recommend!", verified: true, product: "Running Sneakers" },
 ];
 
 export default async function HomePage() {
@@ -38,7 +38,7 @@ export default async function HomePage() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 items-center">
             <div>
               <span className="inline-block bg-blue-100 text-blue-700 text-xs font-semibold px-3 py-1 rounded-full mb-4">
-                New Collection 2024
+                New Collection 2026
               </span>
               <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold text-gray-900 mb-4 leading-tight">
                 Premium Quality
@@ -91,10 +91,10 @@ export default async function HomePage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-2 md:grid-cols-5 divide-x divide-gray-100">
             {[
-              { emoji: "🛡️", label: "Secure Checkout", sub: "100% Safe" },
-              { emoji: "🌿", label: "100% Genuine", sub: "Quality Products" },
+              { emoji: "🛡️", label: "Secure Checkout", sub: "SSL Encrypted" },
+              { emoji: "✅", label: "Quality Checked", sub: "Before Dispatch" },
               { emoji: "🚚", label: "Free Delivery", sub: "Orders ₹499+" },
-              { emoji: "⭐", label: "Top Rated", sub: "5-Star Reviews" },
+              { emoji: "⭐", label: "Customer Rated", sub: "Real Reviews" },
               { emoji: "🔄", label: "Easy Returns", sub: "7-Day Policy" },
             ].map((badge) => (
               <div key={badge.label} className="py-5 md:py-6 text-center">
@@ -231,10 +231,10 @@ export default async function HomePage() {
           </div>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
             {[
-              { emoji: "💪", title: "Quality Guaranteed", desc: "Every product tested and verified" },
+              { emoji: "💪", title: "Quality Products", desc: "Carefully sourced from trusted suppliers" },
               { emoji: "🚚", title: "Free Delivery", desc: "Free shipping on orders above ₹499" },
               { emoji: "🔄", title: "Easy Returns", desc: "7-day hassle-free return policy" },
-              { emoji: "⭐", title: "Top Rated", desc: "5-star rated by happy customers" },
+              { emoji: "⭐", title: "Trusted by Customers", desc: "Rated highly by our buyers" },
             ].map((item) => (
               <div key={item.title} className="text-center bg-white rounded-xl p-6 border border-gray-100 hover:shadow-md transition-shadow">
                 <span className="text-3xl block mb-3">{item.emoji}</span>
@@ -261,7 +261,7 @@ export default async function HomePage() {
                 What started as a simple love for quality products has grown into a mission: to bring you the finest, hand-picked items at honest prices.
               </p>
               <p className="text-gray-600 text-base leading-relaxed mb-4">
-                Every item in our collection is carefully curated, tested, and priced fairly. We work directly with trusted brands to bring you the best deals without any middlemen.
+                Every item in our collection is carefully curated, tested, and priced fairly. We source from trusted suppliers to bring you the best deals.
               </p>
               <p className="text-gray-600 text-base leading-relaxed mb-6">
                 No shortcuts. No compromises. Just honest, quality shopping.

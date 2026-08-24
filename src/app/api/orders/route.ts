@@ -11,7 +11,7 @@ interface OrderItem {
 
 interface ShippingInfo {
   name: string;
-  email: string;
+  email?: string;
   phone?: string;
   address: string;
   city: string;
@@ -30,7 +30,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "No items in cart" }, { status: 400 });
     }
 
-    if (!shipping?.name || !shipping?.email || !shipping?.address || !shipping?.city || !shipping?.state || !shipping?.zip) {
+    if (!shipping?.name || !shipping?.address || !shipping?.city || !shipping?.state || !shipping?.zip) {
       return NextResponse.json({ error: "Shipping information is incomplete" }, { status: 400 });
     }
 
@@ -51,12 +51,22 @@ export async function POST(req: NextRequest) {
 
     let userId = session?.user?.id;
     if (!userId) {
-      const existingUser = await prisma.user.findUnique({ where: { email: shipping.email } });
+      let existingUser = null;
+      if (shipping.email) {
+        existingUser = await prisma.user.findUnique({ where: { email: shipping.email } });
+      }
+      if (!existingUser && shipping.phone) {
+        existingUser = await prisma.user.findUnique({ where: { phone: shipping.phone } });
+      }
       if (existingUser) {
         userId = existingUser.id;
       } else {
         const guestUser = await prisma.user.create({
-          data: { email: shipping.email, name: shipping.name },
+          data: {
+            name: shipping.name,
+            email: shipping.email || undefined,
+            phone: shipping.phone || undefined,
+          },
         });
         userId = guestUser.id;
       }
@@ -75,7 +85,7 @@ export async function POST(req: NextRequest) {
         orderNumber,
         total,
         shippingName: shipping.name,
-        shippingEmail: shipping.email,
+        shippingEmail: shipping.email || "",
         shippingPhone: shipping.phone || null,
         shippingAddr: JSON.stringify(shipping),
         userId,

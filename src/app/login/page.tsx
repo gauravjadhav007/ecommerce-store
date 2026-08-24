@@ -89,7 +89,7 @@ function LoginForm() {
       });
 
       if (result?.error) {
-        setError("Login failed");
+        setError(`Login failed: ${result.error}`);
         setLoading(false);
       } else {
         router.push(callbackUrl);

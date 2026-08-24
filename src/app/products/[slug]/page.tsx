@@ -188,11 +188,42 @@ export default async function ProductDetailPage({
                     <span className="text-gray-500 ml-2">
                       ₹{(variant.price / 100).toFixed(0)}
                     </span>
+                    {variant.price !== product.price && (
+                      <span className={`ml-1 text-[10px] font-medium ${variant.price > product.price ? "text-red-500" : "text-green-600"}`}>
+                        {variant.price > product.price ? "+" : ""}₹{((variant.price - product.price) / 100).toFixed(0)}
+                      </span>
+                    )}
                   </div>
                 ))}
               </div>
             </div>
           )}
+
+          {/* Delivery & Returns Info */}
+          <div className="mt-6 sm:mt-8 space-y-3 border-t border-gray-200 pt-6">
+            <h3 className="font-semibold text-sm sm:text-base mb-3">Shipping & Returns</h3>
+            <div className="flex items-start gap-3 text-xs sm:text-sm text-gray-600">
+              <span className="text-green-600 mt-0.5">✓</span>
+              <div>
+                <p className="font-medium text-gray-900">Free Delivery</p>
+                <p>On orders above ₹499. Standard delivery: 5-7 business days.</p>
+              </div>
+            </div>
+            <div className="flex items-start gap-3 text-xs sm:text-sm text-gray-600">
+              <span className="text-green-600 mt-0.5">✓</span>
+              <div>
+                <p className="font-medium text-gray-900">7-Day Returns</p>
+                <p>Easy returns within 7 days of delivery. Item must be unused and in original packaging.</p>
+              </div>
+            </div>
+            <div className="flex items-start gap-3 text-xs sm:text-sm text-gray-600">
+              <span className="text-green-600 mt-0.5">✓</span>
+              <div>
+                <p className="font-medium text-gray-900">Secure Payment</p>
+                <p>UPI, Credit/Debit cards accepted. SSL encrypted checkout.</p>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 

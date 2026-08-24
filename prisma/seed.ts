@@ -25,6 +25,9 @@ async function main() {
   const accessories = await prisma.category.create({
     data: { name: "Accessories", slug: "accessories" },
   });
+  const footwear = await prisma.category.create({
+    data: { name: "Footwear", slug: "footwear" },
+  });
   const home = await prisma.category.create({
     data: { name: "Home & Kitchen", slug: "home-kitchen" },
   });
@@ -166,9 +169,9 @@ async function main() {
         compareAt: 399900,
         images: JSON.stringify(["https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=800"]),
         stock: 40,
-        sku: "ACC-003",
+        sku: "FW-001",
         featured: true,
-        categoryId: accessories.id,
+        categoryId: footwear.id,
       },
       {
         name: "Stainless Steel Water Bottle",

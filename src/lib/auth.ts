@@ -1,6 +1,5 @@
 import { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
-import bcrypt from "bcryptjs";
 import prisma from "./prisma";
 
 declare module "next-auth" {
@@ -40,26 +39,31 @@ export const authOptions: NextAuthOptions = {
 
         const phone = credentials.phone;
 
-        let user = await prisma.user.findUnique({
-          where: { phone },
-        });
-
-        if (!user) {
-          user = await prisma.user.create({
-            data: {
-              phone,
-              name: `User ${phone.slice(-4)}`,
-            },
+        try {
+          let user = await prisma.user.findUnique({
+            where: { phone },
           });
-        }
 
-        return {
-          id: user.id,
-          name: user.name,
-          email: user.email,
-          image: user.image,
-          role: user.role,
-        };
+          if (!user) {
+            user = await prisma.user.create({
+              data: {
+                phone,
+                name: `User ${phone.slice(-4)}`,
+              },
+            });
+          }
+
+          return {
+            id: user.id,
+            name: user.name,
+            email: user.email,
+            image: user.image,
+            role: user.role,
+          };
+        } catch (error) {
+          console.error("[AUTH] Authorize error:", error);
+          return null;
+        }
       },
     }),
   ],
