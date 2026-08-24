@@ -18,6 +18,9 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "GT Shop - Quality Products at Honest Prices",
   description: "Curated products for modern living. Free delivery on orders above ₹499. Secure payments. Easy returns.",
+  icons: {
+    icon: "/favicon.svg",
+  },
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
