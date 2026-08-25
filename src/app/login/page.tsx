@@ -4,7 +4,7 @@ import Link from "next/link";
 import { signIn } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState, Suspense } from "react";
-import { AlertTriangle, Phone, KeyRound, ArrowLeft, UserPlus } from "lucide-react";
+import { AlertTriangle, Phone, KeyRound, ArrowLeft, UserPlus, MessageCircle } from "lucide-react";
 
 function LoginForm() {
   const router = useRouter();
@@ -17,6 +17,7 @@ function LoginForm() {
   const [phone, setPhone] = useState("");
   const [otp, setOtp] = useState("");
   const [otpCode, setOtpCode] = useState("");
+  const [whatsappUrl, setWhatsappUrl] = useState("");
   const [isNewUser, setIsNewUser] = useState(false);
 
   const [firstName, setFirstName] = useState("");
@@ -60,6 +61,7 @@ function LoginForm() {
       }
 
       setOtpCode(data.otp);
+      setWhatsappUrl(data.whatsappUrl || "");
       setStep("otp");
     } catch {
       setError("Something went wrong");
@@ -230,61 +232,83 @@ function LoginForm() {
       )}
 
       {step === "otp" && (
-        <form onSubmit={handleVerifyOtp} className="space-y-3 sm:space-y-4">
-          <div>
-            <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1">
-              6-Digit OTP
-            </label>
-            <div className="flex justify-center">
-              <input
-                type="text"
-                value={otp}
-                onChange={(e) => setOtp(e.target.value.replace(/\D/g, "").slice(0, 6))}
-                required
-                placeholder="000000"
-                maxLength={6}
-                className="w-full px-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600 text-center text-lg tracking-[0.5em] font-mono"
-              />
-            </div>
+        <div className="space-y-4">
+          {/* WhatsApp OTP button */}
+          {whatsappUrl && (
+            <a
+              href={whatsappUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="w-full bg-green-500 text-white py-3 rounded-lg font-semibold hover:bg-green-600 transition-colors text-sm sm:text-base flex items-center justify-center gap-2"
+            >
+              <MessageCircle className="w-5 h-5" />
+              Open WhatsApp to Get OTP
+            </a>
+          )}
+
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 text-center">
+            <p className="text-xs text-blue-600">
+              Tap the button above to open WhatsApp with your OTP, or check your messages
+            </p>
             {otpCode && (
-              <p className="text-center text-xs text-gray-400 mt-2">
-                Dev OTP: <span className="font-mono font-bold text-gray-600">{otpCode}</span>
+              <p className="text-xs text-blue-500 mt-2">
+                Your OTP: <span className="font-mono font-bold text-blue-700">{otpCode}</span>
               </p>
             )}
           </div>
 
-          <button
-            type="submit"
-            disabled={loading || otp.length !== 6}
-            className="w-full bg-blue-600 text-white py-2.5 sm:py-3 rounded-lg hover:bg-blue-700 disabled:opacity-50 min-h-[44px] text-sm sm:text-base font-medium flex items-center justify-center gap-2"
-          >
-            <KeyRound className="w-4 h-4" />
-            {loading ? "Verifying..." : "Verify OTP"}
-          </button>
+          <form onSubmit={handleVerifyOtp} className="space-y-3 sm:space-y-4">
+            <div>
+              <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1">
+                6-Digit OTP
+              </label>
+              <div className="flex justify-center">
+                <input
+                  type="text"
+                  value={otp}
+                  onChange={(e) => setOtp(e.target.value.replace(/\D/g, "").slice(0, 6))}
+                  required
+                  placeholder="000000"
+                  maxLength={6}
+                  className="w-full px-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600 text-center text-lg tracking-[0.5em] font-mono"
+                />
+              </div>
+            </div>
 
-          <button
-            type="button"
-            onClick={() => {
-              setStep("phone");
-              setOtp("");
-              setOtpCode("");
-              setError("");
-            }}
-            className="w-full text-gray-500 py-2 text-sm font-medium flex items-center justify-center gap-1 hover:text-gray-700"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            Change mobile number
-          </button>
+            <button
+              type="submit"
+              disabled={loading || otp.length !== 6}
+              className="w-full bg-blue-600 text-white py-2.5 sm:py-3 rounded-lg hover:bg-blue-700 disabled:opacity-50 min-h-[44px] text-sm sm:text-base font-medium flex items-center justify-center gap-2"
+            >
+              <KeyRound className="w-4 h-4" />
+              {loading ? "Verifying..." : "Verify OTP"}
+            </button>
 
-          <button
-            type="button"
-            onClick={handleSendOtp}
-            disabled={loading}
-            className="w-full text-blue-600 py-2 text-sm font-medium hover:underline"
-          >
-            Resend OTP
-          </button>
-        </form>
+            <button
+              type="button"
+              onClick={() => {
+                setStep("phone");
+                setOtp("");
+                setOtpCode("");
+                setWhatsappUrl("");
+                setError("");
+              }}
+              className="w-full text-gray-500 py-2 text-sm font-medium flex items-center justify-center gap-1 hover:text-gray-700"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              Change mobile number
+            </button>
+
+            <button
+              type="button"
+              onClick={handleSendOtp}
+              disabled={loading}
+              className="w-full text-blue-600 py-2 text-sm font-medium hover:underline"
+            >
+              Resend OTP
+            </button>
+          </form>
+        </div>
       )}
 
       {step === "register" && (

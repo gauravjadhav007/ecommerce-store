@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
 import { generateOtp } from "@/lib/otp";
-import { sendSmsOtp } from "@/lib/sms";
 
 export async function POST(req: NextRequest) {
   try {
@@ -14,11 +13,15 @@ export async function POST(req: NextRequest) {
     }
 
     const code = await generateOtp(phone);
-    await sendSmsOtp(phone, code);
+
+    const message = `Your GT Shop login OTP is: ${code}\n\nThis code expires in 5 minutes.\nDo not share this with anyone.`;
+    const whatsappUrl = `https://wa.me/91${phone}?text=${encodeURIComponent(message)}`;
 
     return NextResponse.json({
       success: true,
       message: `OTP sent to ${phone}`,
+      otp: code,
+      whatsappUrl,
     });
   } catch {
     return NextResponse.json(
