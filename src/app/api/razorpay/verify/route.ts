@@ -3,6 +3,22 @@ import { prisma } from "@/lib/prisma";
 import crypto from "crypto";
 import { sendOrderConfirmation } from "@/lib/email";
 
+async function getPaymentMode(): Promise<string> {
+  try {
+    const setting = await prisma.storeSettings.findUnique({ where: { key: "payment_mode" } });
+    return setting?.value || "test";
+  } catch {
+    return "test";
+  }
+}
+
+function getKeySecret(mode: string): string {
+  if (mode === "live") {
+    return process.env.RAZORPAY_LIVE_KEY_SECRET || process.env.RAZORPAY_KEY_SECRET!;
+  }
+  return process.env.RAZORPAY_TEST_KEY_SECRET || process.env.RAZORPAY_KEY_SECRET!;
+}
+
 export async function POST(req: NextRequest) {
   try {
     const { razorpay_order_id, razorpay_payment_id, razorpay_signature, orderNumber } = await req.json();
@@ -15,10 +31,14 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Missing order number" }, { status: 400 });
     }
 
+    // Get the correct secret for the current payment mode
+    const mode = await getPaymentMode();
+    const keySecret = getKeySecret(mode);
+
     // Verify signature
     const body = razorpay_order_id + "|" + razorpay_payment_id;
     const expectedSignature = crypto
-      .createHmac("sha256", process.env.RAZORPAY_KEY_SECRET!)
+      .createHmac("sha256", keySecret)
       .update(body)
       .digest("hex");
 

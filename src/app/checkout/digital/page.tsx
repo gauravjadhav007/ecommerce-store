@@ -68,7 +68,7 @@ function CheckoutContent() {
 
       // 2. Open Razorpay Checkout
       const options = {
-        key: orderData.keyId || process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || "rzp_test_YOUR_KEY_ID",
+        key: orderData.keyId,
         amount: orderData.amount,
         currency: orderData.currency,
         name: "GT Shop",

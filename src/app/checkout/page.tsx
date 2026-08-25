@@ -192,7 +192,7 @@ export default function CheckoutPage() {
 
       // 3. Open Razorpay modal
       const options = {
-        key: razorpayData.keyId || process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
+        key: razorpayData.keyId,
         amount: razorpayData.amount,
         currency: razorpayData.currency,
         name: "GT Shop",
