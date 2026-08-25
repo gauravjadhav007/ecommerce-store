@@ -197,15 +197,10 @@ function RegisterForm() {
             </a>
           )}
 
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 text-center">
-            <p className="text-xs text-blue-600">
-              Tap the button above to open WhatsApp with your OTP, or check your messages
+          <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 text-center">
+            <p className="text-xs text-amber-600 font-medium">
+              Development Mode — Use OTP: <span className="font-mono font-bold text-amber-800 text-sm">123456</span>
             </p>
-            {otpCode && (
-              <p className="text-xs text-blue-500 mt-2">
-                Your OTP: <span className="font-mono font-bold text-blue-700">{otpCode}</span>
-              </p>
-            )}
           </div>
 
           <form onSubmit={handleVerifyOtp} className="space-y-3 sm:space-y-4">

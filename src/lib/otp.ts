@@ -1,7 +1,11 @@
 import prisma from "./prisma";
 
+// Set DEV_OTP env var to use a real SMS gateway.
+// When DEV_OTP is not set, hardcoded 123456 is used for development.
+const DEV_OTP = process.env.DEV_OTP || "123456";
+
 export async function generateOtp(phone: string): Promise<string> {
-  const code = Math.floor(100000 + Math.random() * 900000).toString();
+  const code = DEV_OTP;
   
   await prisma.otp.deleteMany({ where: { phone } });
 
