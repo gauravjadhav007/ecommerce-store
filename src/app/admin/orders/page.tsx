@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { Search, Filter, X, Package, User, MapPin, CreditCard, MessageSquare } from "lucide-react";
+import { useEffect, useState, useCallback } from "react";
+import { Search, X, Calendar } from "lucide-react";
 
 interface OrderItem {
   name: string;
@@ -40,28 +40,34 @@ export default function AdminOrdersPage() {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("ALL");
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+  const [dateFrom, setDateFrom] = useState("");
+  const [dateTo, setDateTo] = useState("");
 
-  useEffect(() => {
-    fetch("/api/admin/orders")
-      .then((r) => r.json())
-      .then((data) => { setOrders(data); setLoading(false); })
-      .catch(() => setLoading(false));
-  }, []);
+  const fetchOrders = useCallback(async () => {
+    setLoading(true);
+    const params = new URLSearchParams();
+    if (dateFrom) params.set("from", dateFrom);
+    if (dateTo) params.set("to", dateTo);
+    if (statusFilter !== "ALL") params.set("status", statusFilter);
+
+    const res = await fetch(`/api/admin/orders?${params.toString()}`);
+    const data = await res.json();
+    setOrders(data);
+    setLoading(false);
+  }, [dateFrom, dateTo, statusFilter]);
+
+  useEffect(() => { fetchOrders(); }, [fetchOrders]);
 
   const filtered = orders.filter((o) => {
-    const matchesSearch = search === "" ||
-      o.orderNumber.toLowerCase().includes(search.toLowerCase()) ||
-      o.user.name?.toLowerCase().includes(search.toLowerCase()) ||
-      o.user.email.toLowerCase().includes(search.toLowerCase()) ||
-      o.shippingName.toLowerCase().includes(search.toLowerCase());
-    const matchesStatus = statusFilter === "ALL" || o.status === statusFilter;
-    return matchesSearch && matchesStatus;
+    if (search === "") return true;
+    const q = search.toLowerCase();
+    return (
+      o.orderNumber.toLowerCase().includes(q) ||
+      o.user.name?.toLowerCase().includes(q) ||
+      o.user.email.toLowerCase().includes(q) ||
+      o.shippingName?.toLowerCase().includes(q)
+    );
   });
-
-  const statusCounts = STATUS_OPTIONS.reduce((acc, s) => {
-    acc[s] = s === "ALL" ? orders.length : orders.filter(o => o.status === s).length;
-    return acc;
-  }, {} as Record<string, number>);
 
   const updateStatus = async (id: string, status: string) => {
     await fetch("/api/admin/orders", {
@@ -69,27 +75,32 @@ export default function AdminOrdersPage() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ id, status }),
     });
-    const res = await fetch("/api/admin/orders");
-    const data = await res.json();
-    setOrders(data);
+    fetchOrders();
     if (selectedOrder?.id === id) {
-      const updated = data.find((o: Order) => o.id === id);
-      if (updated) setSelectedOrder(updated);
+      setSelectedOrder((prev) => (prev ? { ...prev, status } : null));
     }
+  };
+
+  const clearFilters = () => {
+    setSearch("");
+    setDateFrom("");
+    setDateTo("");
+    setStatusFilter("ALL");
   };
 
   const shipping = selectedOrder?.shippingAddr ? (() => { try { return JSON.parse(selectedOrder.shippingAddr); } catch { return null; } })() : null;
 
-  if (loading) {
-    return <div className="flex items-center justify-center h-64"><div className="text-gray-500 text-sm">Loading orders...</div></div>;
-  }
-
   return (
     <div>
-      <h1 className="text-2xl font-bold mb-6">Orders</h1>
+      <div className="flex items-center justify-between mb-6">
+        <div>
+          <h1 className="text-2xl font-bold">Orders</h1>
+          <p className="text-sm text-gray-500 mt-1">{filtered.length} order{filtered.length !== 1 ? "s" : ""}</p>
+        </div>
+      </div>
 
       {/* Status Tabs */}
-      <div className="flex gap-2 mb-6 overflow-x-auto pb-2">
+      <div className="flex gap-2 mb-4 overflow-x-auto pb-2">
         {STATUS_OPTIONS.map((s) => (
           <button
             key={s}
@@ -100,24 +111,49 @@ export default function AdminOrdersPage() {
                 : "bg-white border border-gray-200 text-gray-600 hover:bg-gray-50"
             }`}
           >
-            {s === "ALL" ? "All" : s} ({statusCounts[s]})
+            {s === "ALL" ? "All" : s}
           </button>
         ))}
       </div>
 
-      {/* Search */}
-      <div className="relative mb-6">
-        <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-        <input
-          type="text"
-          placeholder="Search by order #, customer name, or email..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 bg-white"
-        />
-        {search && (
-          <button onClick={() => setSearch("")} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
-            <X size={16} />
+      {/* Date Range + Search */}
+      <div className="flex flex-col sm:flex-row gap-3 mb-6">
+        <div className="flex items-center gap-2 bg-white border border-gray-200 rounded-lg px-3 py-2">
+          <Calendar size={16} className="text-gray-400 flex-shrink-0" />
+          <input
+            type="date"
+            value={dateFrom}
+            onChange={(e) => setDateFrom(e.target.value)}
+            className="text-sm border-0 focus:outline-none focus:ring-0 w-full sm:w-auto"
+            placeholder="From"
+          />
+          <span className="text-gray-400 text-sm">to</span>
+          <input
+            type="date"
+            value={dateTo}
+            onChange={(e) => setDateTo(e.target.value)}
+            className="text-sm border-0 focus:outline-none focus:ring-0 w-full sm:w-auto"
+            placeholder="To"
+          />
+        </div>
+        <div className="relative flex-1">
+          <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+          <input
+            type="text"
+            placeholder="Search by order #, customer name, or email..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 bg-white"
+          />
+          {search && (
+            <button onClick={() => setSearch("")} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+              <X size={16} />
+            </button>
+          )}
+        </div>
+        {(dateFrom || dateTo || search) && (
+          <button onClick={clearFilters} className="px-4 py-2.5 text-sm text-gray-500 hover:text-gray-700 whitespace-nowrap">
+            Clear filters
           </button>
         )}
       </div>
@@ -138,27 +174,17 @@ export default function AdminOrdersPage() {
             </thead>
             <tbody className="divide-y divide-gray-50">
               {filtered.length === 0 && (
-                <tr>
-                  <td colSpan={6} className="px-6 py-12 text-center text-gray-400 text-sm">
-                    No orders found
-                  </td>
-                </tr>
+                <tr><td colSpan={6} className="px-6 py-12 text-center text-gray-400 text-sm">No orders found</td></tr>
               )}
               {filtered.map((order) => (
-                <tr
-                  key={order.id}
-                  className="hover:bg-gray-50 cursor-pointer"
-                  onClick={() => setSelectedOrder(order)}
-                >
+                <tr key={order.id} className="hover:bg-gray-50 cursor-pointer" onClick={() => setSelectedOrder(order)}>
                   <td className="px-6 py-4 font-medium text-sm">{order.orderNumber}</td>
                   <td className="px-6 py-4">
                     <div className="text-sm">{order.user.name || order.shippingName || "Guest"}</div>
                     <div className="text-xs text-gray-500">{order.user.email}</div>
                   </td>
                   <td className="px-6 py-4 hidden lg:table-cell">
-                    <div className="text-sm text-gray-600">
-                      {order.items.length} item{order.items.length !== 1 ? "s" : ""}
-                    </div>
+                    <div className="text-sm text-gray-600">{order.items.length} item{order.items.length !== 1 ? "s" : ""}</div>
                   </td>
                   <td className="px-6 py-4 text-sm font-medium">₹{(order.total / 100).toLocaleString("en-IN")}</td>
                   <td className="px-6 py-4" onClick={(e) => e.stopPropagation()}>
@@ -190,23 +216,17 @@ export default function AdminOrdersPage() {
             <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between z-10">
               <div>
                 <h2 className="text-lg font-bold">{selectedOrder.orderNumber}</h2>
-                <p className="text-xs text-gray-500">
-                  Placed {new Date(selectedOrder.createdAt).toLocaleString("en-IN")}
-                </p>
+                <p className="text-xs text-gray-500">{new Date(selectedOrder.createdAt).toLocaleString("en-IN")}</p>
               </div>
-              <button onClick={() => setSelectedOrder(null)} className="p-2 hover:bg-gray-100 rounded-lg">
-                <X size={20} />
-              </button>
+              <button onClick={() => setSelectedOrder(null)} className="p-2 hover:bg-gray-100 rounded-lg"><X size={20} /></button>
             </div>
-
             <div className="p-6 space-y-6">
-              {/* Status */}
               <div>
                 <label className="text-xs font-medium text-gray-500 uppercase tracking-wider">Status</label>
                 <div className="mt-2">
                   <select
                     value={selectedOrder.status}
-                    onChange={(e) => updateStatus(selectedOrder.id, e.target.value)}
+                    onChange={(e) => { updateStatus(selectedOrder.id, e.target.value); setSelectedOrder({ ...selectedOrder, status: e.target.value }); }}
                     className={`text-sm font-medium rounded-lg px-4 py-2 border-0 cursor-pointer ${STATUS_COLORS[selectedOrder.status] || "bg-gray-100 text-gray-600"}`}
                   >
                     {STATUS_OPTIONS.filter(s => s !== "ALL").map((s) => (
@@ -215,13 +235,8 @@ export default function AdminOrdersPage() {
                   </select>
                 </div>
               </div>
-
-              {/* Items */}
               <div>
-                <div className="flex items-center gap-2 mb-3">
-                  <Package size={16} className="text-gray-400" />
-                  <h3 className="text-sm font-semibold">Items ({selectedOrder.items.length})</h3>
-                </div>
+                <h3 className="text-sm font-semibold mb-3">Items ({selectedOrder.items.length})</h3>
                 <div className="space-y-3">
                   {selectedOrder.items.map((item, i) => (
                     <div key={i} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
@@ -237,29 +252,17 @@ export default function AdminOrdersPage() {
                   ))}
                 </div>
               </div>
-
-              {/* Customer */}
               <div>
-                <div className="flex items-center gap-2 mb-3">
-                  <User size={16} className="text-gray-400" />
-                  <h3 className="text-sm font-semibold">Customer</h3>
-                </div>
-                <div className="bg-gray-50 rounded-lg p-4 space-y-2">
+                <h3 className="text-sm font-semibold mb-3">Customer</h3>
+                <div className="bg-gray-50 rounded-lg p-4 space-y-1">
                   <div className="text-sm">{selectedOrder.user.name || selectedOrder.shippingName}</div>
                   <div className="text-sm text-gray-600">{selectedOrder.user.email}</div>
-                  {selectedOrder.user.phone && (
-                    <div className="text-sm text-gray-600">{selectedOrder.user.phone}</div>
-                  )}
+                  {selectedOrder.user.phone && <div className="text-sm text-gray-600">{selectedOrder.user.phone}</div>}
                 </div>
               </div>
-
-              {/* Shipping Address */}
               {shipping && (
                 <div>
-                  <div className="flex items-center gap-2 mb-3">
-                    <MapPin size={16} className="text-gray-400" />
-                    <h3 className="text-sm font-semibold">Shipping Address</h3>
-                  </div>
+                  <h3 className="text-sm font-semibold mb-3">Shipping Address</h3>
                   <div className="bg-gray-50 rounded-lg p-4 text-sm text-gray-600 space-y-1">
                     <div>{shipping.address}</div>
                     <div>{shipping.city}, {shipping.state} {shipping.zip}</div>
@@ -267,13 +270,8 @@ export default function AdminOrdersPage() {
                   </div>
                 </div>
               )}
-
-              {/* Payment Summary */}
               <div>
-                <div className="flex items-center gap-2 mb-3">
-                  <CreditCard size={16} className="text-gray-400" />
-                  <h3 className="text-sm font-semibold">Payment Summary</h3>
-                </div>
+                <h3 className="text-sm font-semibold mb-3">Payment Summary</h3>
                 <div className="bg-gray-50 rounded-lg p-4 space-y-2">
                   <div className="flex justify-between text-sm">
                     <span className="text-gray-600">Subtotal</span>
@@ -285,10 +283,6 @@ export default function AdminOrdersPage() {
                       <span>-₹{(shipping.discount / 100).toLocaleString("en-IN")}</span>
                     </div>
                   )}
-                  <div className="flex justify-between text-sm">
-                    <span className="text-gray-600">Shipping</span>
-                    <span>₹{selectedOrder.total >= 49900 ? 0 : 49}</span>
-                  </div>
                   <div className="border-t border-gray-200 pt-2 flex justify-between font-semibold">
                     <span>Total</span>
                     <span>₹{(selectedOrder.total / 100).toLocaleString("en-IN")}</span>

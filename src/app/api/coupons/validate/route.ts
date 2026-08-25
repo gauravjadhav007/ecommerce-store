@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { validateCoupon, incrementCouponUsage } from "@/lib/coupons";
+import { validateCoupon } from "@/lib/coupons";
 
 export async function POST(req: NextRequest) {
   try {
@@ -11,13 +11,9 @@ export async function POST(req: NextRequest) {
     }
 
     const result = await validateCoupon(code, Number(cartTotal));
-
-    if (result.valid && result.coupon) {
-      await incrementCouponUsage(result.coupon.id);
-    }
-
     return NextResponse.json(result);
-  } catch {
-    return NextResponse.json({ error: "Failed to validate coupon" }, { status: 500 });
+  } catch (err) {
+    console.error("[COUPON-VALIDATE]", err);
+    return NextResponse.json({ valid: false, discount: 0, finalTotal: 0, error: "Failed to validate coupon" }, { status: 200 });
   }
 }

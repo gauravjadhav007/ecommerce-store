@@ -2,15 +2,13 @@
 
 import Link from "next/link";
 import { useCart } from "@/stores/cart";
-import { ShoppingBag, User, Menu, X, Search, ChevronRight, LogOut, Package, Shield } from "lucide-react";
+import { User, Menu, X, LogOut, Package, Shield } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import { useSession, signOut } from "next-auth/react";
 
 export default function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [searchOpen, setSearchOpen] = useState(false);
   const [accountMenuOpen, setAccountMenuOpen] = useState(false);
-  const itemCount = useCart((s) => s.getItemCount());
   const { data: session } = useSession();
   const menuRef = useRef<HTMLDivElement>(null);
 
@@ -37,11 +35,6 @@ export default function Header() {
 
   return (
     <header className="sticky top-0 z-50 bg-white border-b border-gray-100 shadow-sm">
-      {/* Top bar */}
-      <div className="hidden md:block bg-black text-white text-center text-xs py-1.5 tracking-wide">
-        Free Delivery on Orders Above ₹499 | Secure Payments | Easy Returns
-      </div>
-
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-14 md:h-16">
           {/* Mobile menu button */}
@@ -59,31 +52,8 @@ export default function Header() {
             <img src="/logo.svg" alt="GT Shop" className="h-10 md:h-12 w-auto" />
           </Link>
 
-          {/* Desktop nav */}
-          <nav className="hidden md:flex items-center gap-7">
-            {[
-              { href: "/", label: "Home" },
-              { href: "/products", label: "Shop" },
-            ].map((link) => (
-              <Link
-                key={link.href}
-                href={link.href}
-                className="text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors"
-              >
-                {link.label}
-              </Link>
-            ))}
-          </nav>
-
           {/* Right icons */}
           <div className="flex items-center gap-1">
-            <button
-              onClick={() => setSearchOpen(!searchOpen)}
-              className="p-2 text-gray-600 hover:text-gray-900"
-            >
-              <Search size={20} />
-            </button>
-
             {session ? (
               <div ref={menuRef} className="relative">
                 <button
@@ -134,55 +104,14 @@ export default function Header() {
                 <User size={20} />
               </Link>
             )}
-
-            <Link href="/cart" className="p-2 text-gray-600 hover:text-gray-900 relative">
-              <ShoppingBag size={20} />
-              {itemCount > 0 && (
-                <span className="absolute -top-0.5 -right-0.5 bg-blue-600 text-white text-[10px] font-bold rounded-full min-w-[18px] h-[18px] flex items-center justify-center">
-                  {itemCount}
-                </span>
-              )}
-            </Link>
           </div>
         </div>
-
-        {/* Search bar */}
-        {searchOpen && (
-          <div className="pb-3 md:pb-4">
-            <form action="/products" method="get" className="relative">
-              <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-              <input
-                type="text"
-                name="search"
-                placeholder="Search for products..."
-                autoFocus
-                className="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent"
-              />
-            </form>
-          </div>
-        )}
       </div>
 
       {/* Mobile menu */}
       {mobileMenuOpen && (
         <div className="fixed inset-0 top-[56px] bg-white z-50 overflow-y-auto md:hidden">
           <nav className="px-4 py-4">
-            <div className="space-y-1">
-              {[
-                { href: "/", label: "Home" },
-                { href: "/products", label: "Shop" },
-              ].map((link) => (
-                <Link
-                  key={link.href}
-                  href={link.href}
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="flex items-center justify-between py-3 text-gray-800 border-b border-gray-100"
-                >
-                  <span className="text-sm font-medium">{link.label}</span>
-                  <ChevronRight size={16} className="text-gray-400" />
-                </Link>
-              ))}
-            </div>
             <div className="mt-6 pt-4 border-t border-gray-200">
               {session ? (
                 <>
@@ -213,9 +142,6 @@ export default function Header() {
                   Sign In / Register
                 </Link>
               )}
-              <Link href="/cart" onClick={() => setMobileMenuOpen(false)} className="block py-2.5 text-sm font-medium text-gray-800">
-                Cart ({itemCount} items)
-              </Link>
             </div>
           </nav>
         </div>

@@ -9,7 +9,29 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
+    const { searchParams } = new URL(req.url);
+    const from = searchParams.get("from");
+    const to = searchParams.get("to");
+    const status = searchParams.get("status");
+
+    const where: Record<string, unknown> = {};
+
+    if (from || to) {
+      where.createdAt = {};
+      if (from) (where.createdAt as Record<string, Date>).gte = new Date(from);
+      if (to) {
+        const toDate = new Date(to);
+        toDate.setHours(23, 59, 59, 999);
+        (where.createdAt as Record<string, Date>).lte = toDate;
+      }
+    }
+
+    if (status && status !== "ALL") {
+      where.status = status;
+    }
+
     const orders = await prisma.order.findMany({
+      where,
       include: {
         user: { select: { name: true, email: true, phone: true } },
         items: true,

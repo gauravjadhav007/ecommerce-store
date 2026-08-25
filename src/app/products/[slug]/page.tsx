@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { notFound } from "next/navigation";
 import AddToCartButton from "./AddToCartButton";
 import ReviewSection from "@/components/ReviewSection";
+import ProductGallery from "@/components/ProductGallery";
 import Link from "next/link";
 import { parseImages } from "@/lib/utils";
 
@@ -86,35 +87,7 @@ export default async function ProductDetailPage({
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-12">
         {/* Images */}
         <div>
-          <div className="aspect-square bg-gray-100 rounded-lg overflow-hidden">
-            {images[0] ? (
-              <img
-                src={images[0]}
-                alt={product.name}
-                className="w-full h-full object-cover"
-              />
-            ) : (
-              <div className="w-full h-full flex items-center justify-center text-gray-400 text-base sm:text-lg">
-                No Image Available
-              </div>
-            )}
-          </div>
-          {images.length > 1 && (
-            <div className="grid grid-cols-4 gap-2 mt-3 sm:mt-4">
-              {images.map((img, i) => (
-                <div
-                  key={i}
-                  className="aspect-square bg-gray-100 rounded-lg overflow-hidden"
-                >
-                  <img
-                    src={img}
-                    alt={`${product.name} ${i + 1}`}
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-              ))}
-            </div>
-          )}
+          <ProductGallery images={images} name={product.name} />
         </div>
 
         {/* Details */}

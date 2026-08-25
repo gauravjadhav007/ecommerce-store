@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Plus, Pencil, Trash2, X, Search, Eye, EyeOff } from "lucide-react";
+import { Plus, Pencil, Trash2, X, Search, Eye, EyeOff, ImagePlus, GripVertical } from "lucide-react";
 import { parseImages } from "@/lib/utils";
 
 interface Category { id: string; name: string; }
@@ -28,9 +28,11 @@ export default function AdminProductsPage() {
   const [search, setSearch] = useState("");
   const [showModal, setShowModal] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+  const [formImages, setFormImages] = useState<string[]>([]);
+  const [newImageUrl, setNewImageUrl] = useState("");
   const [form, setForm] = useState({
     name: "", description: "", price: "", compareAt: "", stock: "", sku: "",
-    categoryId: "", featured: false, isActive: true, images: "",
+    categoryId: "", featured: false, isActive: true,
   });
 
   useEffect(() => {
@@ -49,9 +51,28 @@ export default function AdminProductsPage() {
     p.sku?.toLowerCase().includes(search.toLowerCase())
   );
 
+  const addImage = () => {
+    const url = newImageUrl.trim();
+    if (url && !formImages.includes(url)) {
+      setFormImages([...formImages, url]);
+      setNewImageUrl("");
+    }
+  };
+
+  const removeImage = (index: number) => {
+    setFormImages(formImages.filter((_, i) => i !== index));
+  };
+
+  const moveImage = (index: number, direction: -1 | 1) => {
+    const newIndex = index + direction;
+    if (newIndex < 0 || newIndex >= formImages.length) return;
+    const updated = [...formImages];
+    [updated[index], updated[newIndex]] = [updated[newIndex], updated[index]];
+    setFormImages(updated);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const imagesArray = form.images.split(",").map((i) => i.trim()).filter(Boolean);
     const payload = {
       ...(editingProduct && { id: editingProduct.id }),
       name: form.name,
@@ -63,7 +84,7 @@ export default function AdminProductsPage() {
       categoryId: form.categoryId || null,
       featured: form.featured,
       isActive: form.isActive,
-      images: JSON.stringify(imagesArray),
+      images: JSON.stringify(formImages),
     };
     await fetch("/api/admin/products", {
       method: editingProduct ? "PUT" : "POST",
@@ -86,14 +107,14 @@ export default function AdminProductsPage() {
 
   const handleEdit = (product: Product) => {
     setEditingProduct(product);
-    const images = parseImages(product.images);
+    setFormImages(parseImages(product.images));
     setForm({
       name: product.name, description: product.description || "",
       price: (product.price / 100).toString(),
       compareAt: product.compareAt ? (product.compareAt / 100).toString() : "",
       stock: product.stock.toString(), sku: product.sku || "",
       categoryId: product.categoryId || "", featured: product.featured,
-      isActive: product.isActive, images: images.join(", "),
+      isActive: product.isActive,
     });
     setShowModal(true);
   };
@@ -101,8 +122,10 @@ export default function AdminProductsPage() {
   const resetForm = () => {
     setForm({
       name: "", description: "", price: "", compareAt: "", stock: "", sku: "",
-      categoryId: "", featured: false, isActive: true, images: "",
+      categoryId: "", featured: false, isActive: true,
     });
+    setFormImages([]);
+    setNewImageUrl("");
   };
 
   const toggleActive = async (product: Product) => {
@@ -130,8 +153,7 @@ export default function AdminProductsPage() {
           onClick={() => { resetForm(); setEditingProduct(null); setShowModal(true); }}
           className="flex items-center gap-2 bg-gray-900 text-white px-4 py-2.5 rounded-lg hover:bg-gray-700 text-sm"
         >
-          <Plus size={16} />
-          Add Product
+          <Plus size={16} /> Add Product
         </button>
       </div>
 
@@ -139,9 +161,7 @@ export default function AdminProductsPage() {
       <div className="relative mb-6">
         <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
         <input
-          type="text"
-          placeholder="Search products by name or SKU..."
-          value={search}
+          type="text" placeholder="Search products by name or SKU..." value={search}
           onChange={(e) => setSearch(e.target.value)}
           className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 bg-white"
         />
@@ -168,11 +188,7 @@ export default function AdminProductsPage() {
             </thead>
             <tbody className="divide-y divide-gray-50">
               {filtered.length === 0 && (
-                <tr>
-                  <td colSpan={6} className="px-6 py-12 text-center text-gray-400 text-sm">
-                    No products found
-                  </td>
-                </tr>
+                <tr><td colSpan={6} className="px-6 py-12 text-center text-gray-400 text-sm">No products found</td></tr>
               )}
               {filtered.map((product) => {
                 const images = parseImages(product.images);
@@ -185,16 +201,14 @@ export default function AdminProductsPage() {
                         </div>
                         <div>
                           <div className="text-sm font-medium">{product.name}</div>
-                          <div className="text-xs text-gray-500">{product.sku || "No SKU"}</div>
+                          <div className="text-xs text-gray-500">{images.length} photo{images.length !== 1 ? "s" : ""} · {product.sku || "No SKU"}</div>
                         </div>
                       </div>
                     </td>
                     <td className="px-6 py-4 text-sm text-gray-500 hidden md:table-cell">{product.category?.name || "-"}</td>
                     <td className="px-6 py-4">
                       <div className="text-sm font-medium">₹{(product.price / 100).toLocaleString("en-IN")}</div>
-                      {product.compareAt && (
-                        <div className="text-xs text-gray-400 line-through">₹{(product.compareAt / 100).toLocaleString("en-IN")}</div>
-                      )}
+                      {product.compareAt && <div className="text-xs text-gray-400 line-through">₹{(product.compareAt / 100).toLocaleString("en-IN")}</div>}
                     </td>
                     <td className="px-6 py-4 hidden md:table-cell">
                       <span className={`text-sm font-medium ${product.stock > 10 ? "text-green-600" : product.stock > 0 ? "text-orange-600" : "text-red-600"}`}>
@@ -202,12 +216,10 @@ export default function AdminProductsPage() {
                       </span>
                     </td>
                     <td className="px-6 py-4 hidden sm:table-cell">
-                      <button
-                        onClick={() => toggleActive(product)}
+                      <button onClick={() => toggleActive(product)}
                         className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium cursor-pointer transition-colors ${
                           product.isActive ? "bg-green-100 text-green-700 hover:bg-green-200" : "bg-gray-100 text-gray-500 hover:bg-gray-200"
-                        }`}
-                      >
+                        }`}>
                         {product.isActive ? <Eye size={12} /> : <EyeOff size={12} />}
                         {product.isActive ? "Active" : "Draft"}
                       </button>
@@ -236,9 +248,7 @@ export default function AdminProductsPage() {
           <div className="bg-white rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
             <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between z-10">
               <h2 className="text-lg font-bold">{editingProduct ? "Edit Product" : "Add Product"}</h2>
-              <button onClick={() => setShowModal(false)} className="p-2 hover:bg-gray-100 rounded-lg">
-                <X size={20} />
-              </button>
+              <button onClick={() => setShowModal(false)} className="p-2 hover:bg-gray-100 rounded-lg"><X size={20} /></button>
             </div>
             <form onSubmit={handleSubmit} className="p-6 space-y-4">
               <div>
@@ -283,12 +293,49 @@ export default function AdminProductsPage() {
                     className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 text-sm" />
                 </div>
               </div>
+
+              {/* Multi-Photo Manager */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Images (comma-separated URLs)</label>
-                <input type="text" value={form.images} onChange={(e) => setForm({ ...form, images: e.target.value })}
-                  placeholder="https://example.com/img1.jpg, https://example.com/img2.jpg"
-                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 text-sm" />
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <span className="flex items-center gap-1.5"><ImagePlus size={14} /> Product Photos ({formImages.length})</span>
+                </label>
+                {formImages.length > 0 && (
+                  <div className="grid grid-cols-4 gap-2 mb-3">
+                    {formImages.map((url, i) => (
+                      <div key={i} className="relative group aspect-square bg-gray-100 rounded-lg overflow-hidden border border-gray-200">
+                        <img src={url} alt={`Photo ${i + 1}`} className="w-full h-full object-cover" />
+                        {i === 0 && (
+                          <span className="absolute top-1 left-1 bg-blue-600 text-white text-[9px] font-bold px-1.5 py-0.5 rounded">PRIMARY</span>
+                        )}
+                        <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1">
+                          {i > 0 && (
+                            <button type="button" onClick={() => moveImage(i, -1)} className="p-1 bg-white/90 rounded text-xs font-medium" title="Move left">←</button>
+                          )}
+                          {i < formImages.length - 1 && (
+                            <button type="button" onClick={() => moveImage(i, 1)} className="p-1 bg-white/90 rounded text-xs font-medium" title="Move right">→</button>
+                          )}
+                          <button type="button" onClick={() => removeImage(i)} className="p-1 bg-red-500 text-white rounded" title="Remove"><X size={12} /></button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                <div className="flex gap-2">
+                  <input
+                    type="url" value={newImageUrl}
+                    onChange={(e) => setNewImageUrl(e.target.value)}
+                    onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addImage(); } }}
+                    placeholder="Paste image URL and press Add"
+                    className="flex-1 px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 text-sm"
+                  />
+                  <button type="button" onClick={addImage}
+                    className="px-4 py-2.5 bg-gray-100 hover:bg-gray-200 rounded-lg text-sm font-medium whitespace-nowrap">
+                    Add
+                  </button>
+                </div>
+                <p className="text-xs text-gray-400 mt-1">Paste image URL, click Add or press Enter. First image is the primary photo.</p>
               </div>
+
               <div className="flex items-center gap-6">
                 <label className="flex items-center gap-2">
                   <input type="checkbox" checked={form.featured} onChange={(e) => setForm({ ...form, featured: e.target.checked })} className="rounded w-4 h-4" />
@@ -301,9 +348,7 @@ export default function AdminProductsPage() {
               </div>
               <div className="flex gap-3 pt-2">
                 <button type="button" onClick={() => setShowModal(false)}
-                  className="flex-1 px-4 py-2.5 border border-gray-300 rounded-lg text-sm font-medium hover:bg-gray-50">
-                  Cancel
-                </button>
+                  className="flex-1 px-4 py-2.5 border border-gray-300 rounded-lg text-sm font-medium hover:bg-gray-50">Cancel</button>
                 <button type="submit"
                   className="flex-1 px-4 py-2.5 bg-gray-900 text-white rounded-lg text-sm font-medium hover:bg-gray-700">
                   {editingProduct ? "Update Product" : "Add Product"}
