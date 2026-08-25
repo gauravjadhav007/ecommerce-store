@@ -8,6 +8,12 @@ const authRoutes = ["/login", "/register"];
 
 function decodeToken(token: string): { role?: string } | null {
   try {
+    // Handle simple base64url tokens (from admin-login)
+    if (!token.includes(".")) {
+      const decoded = JSON.parse(Buffer.from(token, "base64url").toString());
+      return decoded;
+    }
+    // Handle JWT format (from next-auth)
     const payload = token.split(".")[1];
     if (!payload) return null;
     const decoded = JSON.parse(Buffer.from(payload, "base64url").toString());

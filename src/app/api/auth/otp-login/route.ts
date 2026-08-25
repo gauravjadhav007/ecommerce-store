@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from "next/server";
-import { encode } from "next-auth/jwt";
 import prisma from "@/lib/prisma";
 
 export async function POST(req: NextRequest) {
@@ -16,21 +15,23 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "User not found. Please register first." }, { status: 404 });
     }
 
-    const token = await encode({
-      secret: process.env.NEXTAUTH_SECRET!,
-      token: {
-        sub: user.id,
-        id: user.id,
-        name: user.name,
-        email: user.email,
-        phone: user.phone,
-        role: user.role,
-        firstName: user.firstName,
-        lastName: user.lastName,
-        gender: user.gender,
-        dob: user.dob?.toISOString() || null,
-      },
-    });
+    // Simple base64url payload the middleware can decode
+    const payload = {
+      sub: user.id,
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      phone: user.phone,
+      role: user.role,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      gender: user.gender,
+      dob: user.dob?.toISOString() || null,
+      iat: Math.floor(Date.now() / 1000),
+      exp: Math.floor(Date.now() / 1000) + 30 * 24 * 60 * 60,
+    };
+
+    const token = Buffer.from(JSON.stringify(payload)).toString("base64url");
 
     const response = NextResponse.json({ success: true });
 
@@ -43,6 +44,7 @@ export async function POST(req: NextRequest) {
     };
 
     response.cookies.set("__Secure-next-auth.session-token", token, cookieOpts);
+    response.cookies.set("next-auth.session-token", token, { ...cookieOpts, secure: false });
 
     return response;
   } catch (error) {
