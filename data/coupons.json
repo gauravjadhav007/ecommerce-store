@@ -1,0 +1,38 @@
+[
+  {
+    "id": "coupon-1",
+    "code": "WELCOME10",
+    "discountType": "percentage",
+    "value": 10,
+    "minOrder": 0,
+    "maxUses": 100,
+    "usedCount": 12,
+    "expiresAt": "2026-12-31T23:59:59.000Z",
+    "isActive": true,
+    "createdAt": "2026-01-01T00:00:00.000Z"
+  },
+  {
+    "id": "coupon-2",
+    "code": "FLAT100",
+    "discountType": "flat",
+    "value": 10000,
+    "minOrder": 50000,
+    "maxUses": 50,
+    "usedCount": 5,
+    "expiresAt": "2026-12-31T23:59:59.000Z",
+    "isActive": true,
+    "createdAt": "2026-01-15T00:00:00.000Z"
+  },
+  {
+    "id": "coupon-3",
+    "code": "SAVE20",
+    "discountType": "percentage",
+    "value": 20,
+    "minOrder": 10000,
+    "maxUses": 200,
+    "usedCount": 87,
+    "expiresAt": "2026-06-30T23:59:59.000Z",
+    "isActive": false,
+    "createdAt": "2026-02-01T00:00:00.000Z"
+  }
+]

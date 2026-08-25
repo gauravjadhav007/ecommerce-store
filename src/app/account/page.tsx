@@ -105,7 +105,7 @@ export default function AccountPage() {
     { icon: Mail, label: "Email Address", href: null },
     { icon: MapPin, label: "My Address", href: "/account/address" },
     { icon: RotateCcw, label: "My Returns", href: "/account/returns" },
-    { icon: Heart, label: "My Wishlist", href: "/account/wishlist" },
+    { icon: Heart, label: "My Wishlist", href: "/wishlist" },
   ];
 
   return (
@@ -196,12 +196,20 @@ export default function AccountPage() {
                 <label className="block text-sm font-medium text-gray-700 mb-1.5">
                   Email Address
                 </label>
-                <input
-                  type="email"
-                  value={profile.email}
-                  readOnly
-                  className="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm bg-gray-50 text-gray-600"
-                />
+                <div className="relative">
+                  <input
+                    type="email"
+                    value={profile.email}
+                    readOnly
+                    className="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm bg-gray-50 text-gray-600"
+                  />
+                  {profile.email && (
+                    <span className="absolute right-3 top-1/2 -translate-y-1/2 inline-flex items-center gap-1 text-xs text-green-600 font-medium">
+                      <Check size={14} className="text-green-500" />
+                      Verified
+                    </span>
+                  )}
+                </div>
               </div>
 
               {/* Gender */}

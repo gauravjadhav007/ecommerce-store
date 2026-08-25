@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { notFound } from "next/navigation";
 import AddToCartButton from "./AddToCartButton";
+import ReviewSection from "@/components/ReviewSection";
 import Link from "next/link";
 import { parseImages } from "@/lib/utils";
 
@@ -14,9 +15,17 @@ export async function generateMetadata({
     where: { slug },
   });
   if (!product) return { title: "Product Not Found" };
+  const images = parseImages(product.images);
   return {
     title: `${product.name} | GT Shop`,
-    description: product.description?.slice(0, 160),
+    description:
+      product.description?.slice(0, 160) ||
+      `${product.name} - Quality products at honest prices`,
+    openGraph: {
+      title: product.name,
+      description: product.description || "",
+      images: images[0] ? [images[0]] : [],
+    },
   };
 }
 
@@ -228,27 +237,7 @@ export default async function ProductDetailPage({
       </div>
 
       {/* Reviews */}
-      {product.reviews.length > 0 && (
-        <section className="mt-10 sm:mt-16">
-          <h2 className="text-xl sm:text-2xl font-bold mb-4 sm:mb-6">Customer Reviews</h2>
-          <div className="space-y-4 sm:space-y-6">
-            {product.reviews.map((review) => (
-              <div key={review.id} className="border-b border-gray-200 pb-4 sm:pb-6">
-                <div className="flex items-center gap-2">
-                  <span className="text-yellow-400">
-                    {"★".repeat(review.rating)}
-                    {"☆".repeat(5 - review.rating)}
-                  </span>
-                  <span className="font-medium text-sm sm:text-base">{review.user.name}</span>
-                </div>
-                {review.comment && (
-                  <p className="text-sm sm:text-base text-gray-600 mt-2">{review.comment}</p>
-                )}
-              </div>
-            ))}
-          </div>
-        </section>
-      )}
+      <ReviewSection productId={product.id} />
     </div>
   );
 }

@@ -2,9 +2,10 @@
 
 import Link from "next/link";
 import { useCart } from "@/stores/cart";
+import { useWishlist } from "@/stores/wishlist";
 import { parseImages } from "@/lib/utils";
 import { useState } from "react";
-import { Zap } from "lucide-react";
+import { Zap, Heart } from "lucide-react";
 
 interface ProductCardProps {
   product: {
@@ -24,11 +25,13 @@ interface ProductCardProps {
 
 export default function FeaturedProductCard({ product }: ProductCardProps) {
   const addItem = useCart((s) => s.addItem);
+  const { toggleItem, isInWishlist } = useWishlist();
   const images = parseImages(product.images);
   const [selectedVariant, setSelectedVariant] = useState(
     product.variants[0] || null
   );
   const [added, setAdded] = useState(false);
+  const inWishlist = isInWishlist(product.id);
 
   const currentPrice = selectedVariant ? selectedVariant.price : product.price;
   const discount =
@@ -53,6 +56,18 @@ export default function FeaturedProductCard({ product }: ProductCardProps) {
     });
     setAdded(true);
     setTimeout(() => setAdded(false), 1500);
+  };
+
+  const handleToggleWishlist = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    toggleItem({
+      id: product.id,
+      name: product.name,
+      slug: product.slug,
+      price: currentPrice,
+      image: images[0] || null,
+    });
   };
 
   const features = [
@@ -87,6 +102,12 @@ export default function FeaturedProductCard({ product }: ProductCardProps) {
               Best Seller
             </span>
           )}
+          <button
+            onClick={handleToggleWishlist}
+            className="absolute top-3 right-3 bg-white/80 backdrop-blur-sm p-2 rounded-full hover:bg-white transition-colors shadow-lg z-10"
+          >
+            <Heart size={16} className={inWishlist ? "text-red-500 fill-red-500" : "text-gray-600"} />
+          </button>
         </div>
       </Link>
 

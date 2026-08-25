@@ -3,6 +3,7 @@ import type { NextRequest } from "next/server";
 
 const protectedRoutes = ["/cart", "/checkout"];
 const adminRoutes = ["/admin"];
+const adminLoginRoutes = ["/admin/login"];
 const authRoutes = ["/login", "/register"];
 
 function decodeToken(token: string): { role?: string } | null {
@@ -20,7 +21,18 @@ export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const token = request.cookies.get("next-auth.session-token")?.value;
 
-  // Redirect logged-in users away from login/register
+  // Allow admin login page without auth
+  if (adminLoginRoutes.includes(pathname)) {
+    if (token) {
+      const payload = decodeToken(token);
+      if (payload?.role === "ADMIN") {
+        return NextResponse.redirect(new URL("/admin", request.url));
+      }
+    }
+    return NextResponse.next();
+  }
+
+  // Redirect logged-in users away from login/register (except admin)
   if (authRoutes.includes(pathname) && token) {
     return NextResponse.redirect(new URL("/", request.url));
   }
@@ -35,9 +47,7 @@ export function middleware(request: NextRequest) {
   // Protect admin routes - require ADMIN role
   if (adminRoutes.some((route) => pathname.startsWith(route))) {
     if (!token) {
-      const loginUrl = new URL("/login", request.url);
-      loginUrl.searchParams.set("callbackUrl", pathname);
-      return NextResponse.redirect(loginUrl);
+      return NextResponse.redirect(new URL("/admin/login", request.url));
     }
     const payload = decodeToken(token);
     if (payload?.role !== "ADMIN") {

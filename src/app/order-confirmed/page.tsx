@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
 import { CheckCircle, Package, Truck, CreditCard, MapPin, ArrowRight } from "lucide-react";
+import { getWhatsAppOrderLink } from "@/lib/whatsapp";
 
 interface OrderItem {
   id: string;
@@ -23,6 +24,7 @@ interface Order {
   shippingPhone: string | null;
   shippingAddr: any;
   createdAt: string;
+  paidAt: string | null;
   items: OrderItem[];
 }
 
@@ -238,7 +240,7 @@ function OrderConfirmed() {
             </div>
             <div className="mt-3 p-2.5 bg-green-50 rounded-lg">
               <p className="text-xs text-green-700 font-medium flex items-center gap-1.5">
-                <CreditCard size={12} /> Payment: Cash on Delivery
+                <CreditCard size={12} /> Payment: {order.paidAt ? "Paid Online (Razorpay)" : "Cash on Delivery"}
               </p>
             </div>
           </div>
@@ -314,6 +316,16 @@ function OrderConfirmed() {
               >
                 Continue Shopping <ArrowRight size={16} />
               </Link>
+              {order?.shippingPhone && (
+                <a
+                  href={getWhatsAppOrderLink(order.shippingPhone, order.orderNumber, order.total)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="bg-green-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-green-700 transition-colors text-sm sm:text-base flex items-center justify-center gap-2"
+                >
+                  Track on WhatsApp
+                </a>
+              )}
               <Link
                 href="/"
                 className="border border-gray-300 px-6 py-3 rounded-lg font-semibold hover:bg-gray-50 transition-colors text-sm sm:text-base"

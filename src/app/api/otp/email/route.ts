@@ -1,24 +1,24 @@
 import { NextRequest, NextResponse } from "next/server";
 import { generateOtp } from "@/lib/otp";
-import { sendSmsOtp } from "@/lib/sms";
+import { sendOtpEmail } from "@/lib/email";
 
 export async function POST(req: NextRequest) {
   try {
-    const { phone } = await req.json();
+    const { email } = await req.json();
 
-    if (!phone || !/^[6-9]\d{9}$/.test(phone)) {
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       return NextResponse.json(
-        { error: "Valid 10-digit mobile number required" },
+        { error: "Valid email address required" },
         { status: 400 }
       );
     }
 
-    const code = await generateOtp(phone);
-    await sendSmsOtp(phone, code);
+    const code = await generateOtp(email);
+    await sendOtpEmail(email, code);
 
     return NextResponse.json({
       success: true,
-      message: `OTP sent to ${phone}`,
+      message: `OTP sent to ${email}`,
     });
   } catch {
     return NextResponse.json(

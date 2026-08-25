@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useCart } from "@/stores/cart";
 import { ShoppingBag, Heart } from "lucide-react";
 import { parseImages } from "@/lib/utils";
+import { useWishlist } from "@/stores/wishlist";
 import { useState } from "react";
 
 interface ProductCardProps {
@@ -21,8 +22,10 @@ interface ProductCardProps {
 
 export default function ProductCard({ product }: ProductCardProps) {
   const addItem = useCart((s) => s.addItem);
+  const { toggleItem, isInWishlist } = useWishlist();
   const images = parseImages(product.images);
   const [added, setAdded] = useState(false);
+  const inWishlist = isInWishlist(product.id);
 
   const handleAddToCart = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -37,6 +40,18 @@ export default function ProductCard({ product }: ProductCardProps) {
     });
     setAdded(true);
     setTimeout(() => setAdded(false), 1500);
+  };
+
+  const handleToggleWishlist = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    toggleItem({
+      id: product.id,
+      name: product.name,
+      slug: product.slug,
+      price: product.price,
+      image: images[0] || null,
+    });
   };
 
   const discount = product.compareAt && product.compareAt > product.price
@@ -63,6 +78,12 @@ export default function ProductCard({ product }: ProductCardProps) {
           </span>
         )}
         <button
+          onClick={handleToggleWishlist}
+          className="absolute top-1.5 right-1.5 sm:top-2 sm:right-2 bg-white/80 backdrop-blur-sm p-1.5 sm:p-2 rounded-full opacity-0 group-hover:opacity-100 transition-all duration-300 hover:bg-white shadow-lg"
+        >
+          <Heart size={14} className={inWishlist ? "text-red-500 fill-red-500" : "text-gray-600"} />
+        </button>
+        <button
           onClick={handleAddToCart}
           className="absolute bottom-2 right-2 sm:bottom-3 sm:right-3 bg-gray-900 text-white p-2 sm:p-2.5 rounded-full opacity-0 group-hover:opacity-100 transition-all duration-300 hover:bg-gray-700 shadow-lg"
         >
@@ -77,7 +98,7 @@ export default function ProductCard({ product }: ProductCardProps) {
           {product.name}
         </h3>
         <div className="flex items-center gap-1.5 sm:gap-2 mt-1">
-          <span className="text-sm sm:text-base font-bold text-gray-900">
+          <span className="text-sm sm:text-base font-bold text-blue-600">
             ₹{(product.price / 100).toFixed(0)}
           </span>
           {product.compareAt && product.compareAt > product.price && (

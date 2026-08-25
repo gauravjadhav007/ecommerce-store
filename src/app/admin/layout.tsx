@@ -2,8 +2,8 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState } from "react";
-import { LayoutDashboard, Package, ShoppingCart, Users, FolderOpen, Menu, X } from "lucide-react";
+import { useState, useEffect } from "react";
+import { LayoutDashboard, Package, ShoppingCart, Users, FolderOpen, Menu, X, Tag, AlertTriangle } from "lucide-react";
 
 const links = [
   { href: "/admin", label: "Dashboard", icon: LayoutDashboard },
@@ -11,6 +11,7 @@ const links = [
   { href: "/admin/categories", label: "Categories", icon: FolderOpen },
   { href: "/admin/orders", label: "Orders", icon: ShoppingCart },
   { href: "/admin/users", label: "Users", icon: Users },
+  { href: "/admin/coupons", label: "Coupons", icon: Tag },
 ];
 
 export default function AdminLayout({
@@ -20,6 +21,22 @@ export default function AdminLayout({
 }) {
   const pathname = usePathname();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [lowStockCount, setLowStockCount] = useState(0);
+
+  useEffect(() => {
+    fetch("/api/admin/inventory")
+      .then((r) => r.json())
+      .then((data) => {
+        if (Array.isArray(data)) {
+          setLowStockCount(data.length);
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  if (pathname === "/admin/login") {
+    return <>{children}</>;
+  }
 
   return (
     <div className="min-h-[calc(100vh-64px)]">
@@ -51,7 +68,12 @@ export default function AdminLayout({
                   }`}
                 >
                   <Icon size={18} />
-                  {link.label}
+                  <span className="flex-1">{link.label}</span>
+                  {link.href === "/admin" && lowStockCount > 0 && (
+                    <span className="inline-flex items-center justify-center w-5 h-5 text-[10px] font-bold bg-orange-500 text-white rounded-full">
+                      {lowStockCount}
+                    </span>
+                  )}
                 </Link>
               );
             })}
@@ -78,11 +100,24 @@ export default function AdminLayout({
                   }`}
                 >
                   <Icon size={18} />
-                  {link.label}
+                  <span className="flex-1">{link.label}</span>
+                  {link.href === "/admin" && lowStockCount > 0 && (
+                    <span className="inline-flex items-center justify-center w-5 h-5 text-[10px] font-bold bg-orange-500 text-white rounded-full">
+                      {lowStockCount}
+                    </span>
+                  )}
                 </Link>
               );
             })}
           </nav>
+          {lowStockCount > 0 && (
+            <div className="mt-6 mx-3 p-3 bg-orange-50 border border-orange-200 rounded-lg">
+              <div className="flex items-center gap-2 text-orange-700">
+                <AlertTriangle size={14} />
+                <span className="text-xs font-medium">{lowStockCount} product{lowStockCount !== 1 ? "s" : ""} low on stock</span>
+              </div>
+            </div>
+          )}
         </aside>
 
         {/* Main Content */}

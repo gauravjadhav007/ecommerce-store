@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { DollarSign, Package, ShoppingCart, Users } from "lucide-react";
+import { DollarSign, Package, ShoppingCart, Users, AlertTriangle } from "lucide-react";
 
 interface Order {
   id: string;
@@ -20,18 +20,29 @@ interface DashboardStats {
   recentOrders: Order[];
 }
 
+interface LowStockProduct {
+  id: string;
+  name: string;
+  sku: string | null;
+  stock: number;
+  price: number;
+  images: string;
+}
+
 export default function AdminDashboard() {
   const [stats, setStats] = useState<DashboardStats | null>(null);
+  const [lowStockProducts, setLowStockProducts] = useState<LowStockProduct[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch("/api/admin")
-      .then((res) => res.json())
-      .then((data) => {
-        setStats(data);
-        setLoading(false);
-      })
-      .catch(() => setLoading(false));
+    Promise.all([
+      fetch("/api/admin").then((r) => r.json()),
+      fetch("/api/admin/inventory").then((r) => r.json()),
+    ]).then(([statsData, inventoryData]) => {
+      setStats(statsData);
+      setLowStockProducts(inventoryData);
+      setLoading(false);
+    }).catch(() => setLoading(false));
   }, []);
 
   if (loading) {
@@ -101,6 +112,49 @@ export default function AdminDashboard() {
           );
         })}
       </div>
+
+      {/* Low Stock Alerts */}
+      {lowStockProducts.length > 0 && (
+        <div className="bg-white rounded-lg border border-gray-200 mb-6 sm:mb-8">
+          <div className="p-4 sm:p-6 border-b border-gray-200 flex items-center gap-2">
+            <AlertTriangle size={18} className="text-orange-500" />
+            <h2 className="text-base sm:text-lg font-semibold">Low Stock Alerts</h2>
+            <span className="ml-auto px-2 py-0.5 text-xs font-medium bg-orange-100 text-orange-700 rounded-full">
+              {lowStockProducts.length}
+            </span>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[500px]">
+              <thead>
+                <tr className="text-left text-xs sm:text-sm text-gray-500 border-b border-gray-200">
+                  <th className="p-3 sm:p-4">Product</th>
+                  <th className="p-3 sm:p-4 hidden sm:table-cell">SKU</th>
+                  <th className="p-3 sm:p-4">Price</th>
+                  <th className="p-3 sm:p-4">Stock</th>
+                </tr>
+              </thead>
+              <tbody>
+                {lowStockProducts.map((product) => (
+                  <tr key={product.id} className="border-b border-gray-100">
+                    <td className="p-3 sm:p-4 font-medium text-xs sm:text-sm">{product.name}</td>
+                    <td className="p-3 sm:p-4 text-gray-500 text-xs sm:text-sm hidden sm:table-cell">
+                      {product.sku || "—"}
+                    </td>
+                    <td className="p-3 sm:p-4 text-xs sm:text-sm">₹{(product.price / 100).toFixed(0)}</td>
+                    <td className="p-3 sm:p-4">
+                      <span className={`font-semibold text-xs sm:text-sm ${
+                        product.stock === 0 ? "text-red-600" : "text-orange-600"
+                      }`}>
+                        {product.stock === 0 ? "Out of stock" : `${product.stock} left`}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
 
       {/* Recent Orders */}
       <div className="bg-white rounded-lg border border-gray-200">

@@ -1,13 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import crypto from "crypto";
+import { sendOrderConfirmation } from "@/lib/email";
 
 export async function POST(req: NextRequest) {
   try {
-    const { razorpay_order_id, razorpay_payment_id, razorpay_signature, productKey, name, email, phone } = await req.json();
+    const { razorpay_order_id, razorpay_payment_id, razorpay_signature, orderNumber } = await req.json();
 
     if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature) {
       return NextResponse.json({ error: "Missing payment details" }, { status: 400 });
+    }
+
+    if (!orderNumber) {
+      return NextResponse.json({ error: "Missing order number" }, { status: 400 });
     }
 
     // Verify signature
@@ -21,60 +26,38 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Invalid payment signature" }, { status: 400 });
     }
 
-    // Digital product pricing
-    const digitalProducts: Record<string, { name: string; price: number; slug: string }> = {
-      "starter-kit": { name: "Social Media Starter Kit", price: 39900, slug: "social-media-starter-kit" },
-    };
-
-    const product = digitalProducts[productKey || "starter-kit"] || digitalProducts["starter-kit"];
-
-    // Find the actual product in DB
-    const dbProduct = await prisma.product.findFirst({ where: { slug: product.slug } });
-
-    // Find or create user
-    let userId: string;
-    const existingUser = email ? await prisma.user.findUnique({ where: { email } }) : null;
-    if (existingUser) {
-      userId = existingUser.id;
-    } else {
-      const guestUser = await prisma.user.create({
-        data: { email: email || `guest_${Date.now()}@gtshop.in`, name: name || "Customer" },
-      });
-      userId = guestUser.id;
-    }
-
-    // Generate order number
-    const rand = Math.floor(100000 + Math.random() * 900000);
-    const orderNumber = `GT-${rand}`;
-
-    // Create order in database
-    await prisma.order.create({
+    // Update order with payment info
+    const order = await prisma.order.update({
+      where: { orderNumber },
       data: {
-        orderNumber,
-        total: product.price,
-        shippingName: name || "Customer",
-        shippingEmail: email || "",
-        shippingPhone: phone || null,
-        shippingAddr: JSON.stringify({ type: "digital" }),
         paymentIntent: razorpay_payment_id,
         status: "PROCESSING",
-        userId,
-        items: {
-          create: {
-            name: product.name,
-            price: product.price,
-            quantity: 1,
-            isDigital: true,
-            downloaded: false,
-            productId: dbProduct?.id || "digital-" + (productKey || "starter-kit"),
-          },
-        },
+        paidAt: new Date(),
       },
+      include: { items: true },
     });
+
+    // Decrement stock now that payment is confirmed
+    for (const item of order.items) {
+      await prisma.product.update({
+        where: { id: item.productId },
+        data: { stock: { decrement: item.quantity } },
+      });
+    }
+
+    // Send confirmation email (non-blocking)
+    if (order.shippingEmail) {
+      sendOrderConfirmation(
+        order.shippingEmail,
+        order.orderNumber,
+        order.items.map((i) => ({ name: i.name, quantity: i.quantity, price: i.price })),
+        order.total
+      ).catch((err) => console.error("Email send failed:", err));
+    }
 
     return NextResponse.json({
       success: true,
-      orderNumber,
+      orderNumber: order.orderNumber,
       paymentId: razorpay_payment_id,
     });
   } catch (error) {

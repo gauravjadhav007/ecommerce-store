@@ -1,8 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Package, ChevronDown, ChevronUp, X, Clock, Truck, CheckCircle, Trash2 } from "lucide-react";
+import { Package, ChevronDown, ChevronUp, X, Clock, Truck, CheckCircle, Trash2, ChevronRight, MessageCircle } from "lucide-react";
 import { parseImages } from "@/lib/utils";
+import { getWhatsAppOrderLink } from "@/lib/whatsapp";
+import Link from "next/link";
 
 interface OrderItem {
   id: string;
@@ -19,6 +21,7 @@ interface Order {
   status: string;
   total: number;
   createdAt: string;
+  shippingPhone: string | null;
   items: OrderItem[];
 }
 
@@ -108,6 +111,13 @@ export default function OrdersPage() {
 
   return (
     <div>
+      {/* Breadcrumb */}
+      <nav className="flex items-center gap-1.5 text-xs sm:text-sm text-gray-500 mb-4 sm:mb-6">
+        <Link href="/account" className="hover:text-gray-900">My Account</Link>
+        <ChevronRight size={14} />
+        <span className="text-gray-900">My Orders</span>
+      </nav>
+
       <h1 className="text-xl sm:text-2xl font-bold mb-6 sm:mb-8">My Orders</h1>
 
       <div className="space-y-4">
@@ -229,11 +239,11 @@ export default function OrdersPage() {
                   </div>
 
                   {canCancel && (
-                    <div className="mt-4 pt-4 border-t border-gray-100">
+                    <div className="mt-4 pt-4 border-t border-gray-100 flex flex-col sm:flex-row gap-3">
                       <button
                         onClick={() => cancelOrder(order.orderNumber)}
                         disabled={cancellingOrder === order.orderNumber}
-                        className="w-full sm:w-auto flex items-center justify-center gap-2 px-4 py-2.5 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition-colors text-sm font-medium disabled:opacity-50"
+                        className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2.5 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition-colors text-sm font-medium disabled:opacity-50"
                       >
                         {cancellingOrder === order.orderNumber ? (
                           <>
@@ -247,6 +257,17 @@ export default function OrdersPage() {
                           </>
                         )}
                       </button>
+                      {order.shippingPhone && (
+                        <a
+                          href={getWhatsAppOrderLink(order.shippingPhone, order.orderNumber, order.total)}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2.5 bg-green-50 text-green-600 rounded-lg hover:bg-green-100 transition-colors text-sm font-medium"
+                        >
+                          <MessageCircle size={14} />
+                          Track on WhatsApp
+                        </a>
+                      )}
                     </div>
                   )}
                 </div>

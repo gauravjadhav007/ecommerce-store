@@ -3,6 +3,8 @@ import { prisma } from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { parseImages } from "@/lib/utils";
+import { sendOrderConfirmation } from "@/lib/email";
+import { validateCoupon, incrementCouponUsage, getCouponByCode } from "@/lib/coupons";
 
 interface OrderItem {
   productId: string;
@@ -11,8 +13,8 @@ interface OrderItem {
 
 interface ShippingInfo {
   name: string;
-  email?: string;
-  phone?: string;
+  email: string;
+  phone: string;
   address: string;
   city: string;
   state: string;
@@ -20,21 +22,28 @@ interface ShippingInfo {
   country: string;
 }
 
+const FREE_SHIPPING_THRESHOLD = 49900;
+const SHIPPING_COST = 4900;
+
 export async function POST(req: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
     const body = await req.json();
-    const { items, shipping } = body as { items: OrderItem[]; shipping: ShippingInfo };
+    const { items, shipping, couponCode } = body as {
+      items: OrderItem[];
+      shipping: ShippingInfo;
+      couponCode?: string;
+    };
 
     if (!items || items.length === 0) {
       return NextResponse.json({ error: "No items in cart" }, { status: 400 });
     }
 
-    if (!shipping?.name || !shipping?.address || !shipping?.city || !shipping?.state || !shipping?.zip) {
+    if (!shipping?.name || !shipping?.email || !shipping?.phone || !shipping?.address || !shipping?.city || !shipping?.state || !shipping?.zip) {
       return NextResponse.json({ error: "Shipping information is incomplete" }, { status: 400 });
     }
 
-    let total = 0;
+    let subtotal = 0;
     const validItems: Array<{ item: OrderItem; product: any }> = [];
 
     for (const item of items) {
@@ -45,17 +54,25 @@ export async function POST(req: NextRequest) {
       if (product.stock < item.quantity) {
         return NextResponse.json({ error: `Product "${product.name}" is out of stock (available: ${product.stock})` }, { status: 400 });
       }
-      total += product.price * item.quantity;
+      subtotal += product.price * item.quantity;
       validItems.push({ item, product });
     }
 
+    let discount = 0;
+    if (couponCode) {
+      const couponResult = validateCoupon(couponCode, subtotal);
+      if (couponResult.valid) {
+        discount = couponResult.discount;
+      }
+    }
+
+    const shippingCost = subtotal >= FREE_SHIPPING_THRESHOLD ? 0 : SHIPPING_COST;
+    const total = subtotal - discount + shippingCost;
+
     let userId = session?.user?.id;
     if (!userId) {
-      let existingUser = null;
-      if (shipping.email) {
-        existingUser = await prisma.user.findUnique({ where: { email: shipping.email } });
-      }
-      if (!existingUser && shipping.phone) {
+      let existingUser = await prisma.user.findUnique({ where: { email: shipping.email } });
+      if (!existingUser) {
         existingUser = await prisma.user.findUnique({ where: { phone: shipping.phone } });
       }
       if (existingUser) {
@@ -64,8 +81,8 @@ export async function POST(req: NextRequest) {
         const guestUser = await prisma.user.create({
           data: {
             name: shipping.name,
-            email: shipping.email || undefined,
-            phone: shipping.phone || undefined,
+            email: shipping.email,
+            phone: shipping.phone,
           },
         });
         userId = guestUser.id;
@@ -85,9 +102,9 @@ export async function POST(req: NextRequest) {
         orderNumber,
         total,
         shippingName: shipping.name,
-        shippingEmail: shipping.email || "",
-        shippingPhone: shipping.phone || null,
-        shippingAddr: JSON.stringify(shipping),
+        shippingEmail: shipping.email,
+        shippingPhone: shipping.phone,
+        shippingAddr: JSON.stringify({ ...shipping, discount, couponCode: couponCode || null }),
         userId,
         items: {
           create: validItems.map(({ item, product }) => ({
@@ -109,7 +126,21 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    return NextResponse.json({ orderNumber: order.orderNumber });
+    if (couponCode) {
+      const coupon = getCouponByCode(couponCode);
+      if (coupon) incrementCouponUsage(coupon.id);
+    }
+
+    if (shipping.email) {
+      sendOrderConfirmation(
+        shipping.email,
+        order.orderNumber,
+        order.items.map((i) => ({ name: i.name, quantity: i.quantity, price: i.price })),
+        total,
+      ).catch((err) => console.error("[Order Email] Failed:", err));
+    }
+
+    return NextResponse.json({ orderNumber: order.orderNumber, total });
   } catch (error) {
     console.error("Order creation error:", error);
     return NextResponse.json({ error: "Failed to create order" }, { status: 500 });
