@@ -60,7 +60,7 @@ export async function POST(req: NextRequest) {
 
     let discount = 0;
     if (couponCode) {
-      const couponResult = validateCoupon(couponCode, subtotal);
+      const couponResult = await validateCoupon(couponCode, subtotal);
       if (couponResult.valid) {
         discount = couponResult.discount;
       }
@@ -127,8 +127,8 @@ export async function POST(req: NextRequest) {
     }
 
     if (couponCode) {
-      const coupon = getCouponByCode(couponCode);
-      if (coupon) incrementCouponUsage(coupon.id);
+      const coupon = await getCouponByCode(couponCode);
+      if (coupon) await incrementCouponUsage(coupon.id);
     }
 
     if (shipping.email) {

@@ -10,14 +10,10 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Code and cart total are required" }, { status: 400 });
     }
 
-    const result = validateCoupon(code, Number(cartTotal));
+    const result = await validateCoupon(code, Number(cartTotal));
 
-    if (result.valid) {
-      const coupons = (await import("@/lib/coupons")).getAllCoupons();
-      const coupon = coupons.find((c) => c.code.toUpperCase() === code.toUpperCase());
-      if (coupon) {
-        incrementCouponUsage(coupon.id);
-      }
+    if (result.valid && result.coupon) {
+      await incrementCouponUsage(result.coupon.id);
     }
 
     return NextResponse.json(result);

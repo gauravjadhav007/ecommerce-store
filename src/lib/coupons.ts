@@ -1,77 +1,77 @@
-import { readFileSync, writeFileSync, existsSync } from "fs";
-import { join } from "path";
+import prisma from "./prisma";
 
-export interface Coupon {
+export interface CouponData {
   id: string;
   code: string;
-  discountType: "percentage" | "flat";
+  discountType: string;
   value: number;
   minOrder: number;
   maxUses: number;
   usedCount: number;
+  expiresAt: Date;
+  isActive: boolean;
+  createdAt: Date;
+}
+
+export async function getAllCoupons(): Promise<CouponData[]> {
+  return prisma.coupon.findMany({ orderBy: { createdAt: "desc" } });
+}
+
+export async function getCouponByCode(code: string): Promise<CouponData | null> {
+  return prisma.coupon.findUnique({ where: { code: code.toUpperCase() } });
+}
+
+export async function createCoupon(data: {
+  code: string;
+  discountType: string;
+  value: number;
+  minOrder?: number;
+  maxUses?: number;
+  expiresAt: string;
+  isActive?: boolean;
+}): Promise<CouponData> {
+  return prisma.coupon.create({
+    data: {
+      code: data.code.toUpperCase(),
+      discountType: data.discountType,
+      value: data.value,
+      minOrder: data.minOrder || 0,
+      maxUses: data.maxUses || 0,
+      expiresAt: new Date(data.expiresAt),
+      isActive: data.isActive !== undefined ? data.isActive : true,
+    },
+  });
+}
+
+export async function updateCoupon(id: string, data: Partial<{
+  code: string;
+  discountType: string;
+  value: number;
+  minOrder: number;
+  maxUses: number;
   expiresAt: string;
   isActive: boolean;
-  createdAt: string;
+}>): Promise<CouponData | null> {
+  const updateData: Record<string, unknown> = { ...data };
+  if (data.code) updateData.code = data.code.toUpperCase();
+  if (data.expiresAt) updateData.expiresAt = new Date(data.expiresAt);
+  return prisma.coupon.update({ where: { id }, data: updateData });
 }
 
-const COUPONS_PATH = join(process.cwd(), "data", "coupons.json");
-
-function readCoupons(): Coupon[] {
-  if (!existsSync(COUPONS_PATH)) {
-    writeFileSync(COUPONS_PATH, "[]", "utf-8");
-    return [];
+export async function deleteCoupon(id: string): Promise<boolean> {
+  try {
+    await prisma.coupon.delete({ where: { id } });
+    return true;
+  } catch {
+    return false;
   }
-  const raw = readFileSync(COUPONS_PATH, "utf-8");
-  return JSON.parse(raw);
 }
 
-function writeCoupons(coupons: Coupon[]) {
-  writeFileSync(COUPONS_PATH, JSON.stringify(coupons, null, 2), "utf-8");
-}
-
-export function getAllCoupons(): Coupon[] {
-  return readCoupons();
-}
-
-export function getCouponByCode(code: string): Coupon | undefined {
-  return readCoupons().find((c) => c.code.toUpperCase() === code.toUpperCase());
-}
-
-export function createCoupon(data: Omit<Coupon, "id" | "usedCount" | "createdAt">): Coupon {
-  const coupons = readCoupons();
-  const newCoupon: Coupon = {
-    ...data,
-    id: `coupon-${Date.now()}`,
-    usedCount: 0,
-    createdAt: new Date().toISOString(),
-  };
-  coupons.push(newCoupon);
-  writeCoupons(coupons);
-  return newCoupon;
-}
-
-export function updateCoupon(id: string, data: Partial<Omit<Coupon, "id" | "createdAt">>): Coupon | null {
-  const coupons = readCoupons();
-  const index = coupons.findIndex((c) => c.id === id);
-  if (index === -1) return null;
-  coupons[index] = { ...coupons[index], ...data };
-  writeCoupons(coupons);
-  return coupons[index];
-}
-
-export function deleteCoupon(id: string): boolean {
-  const coupons = readCoupons();
-  const filtered = coupons.filter((c) => c.id !== id);
-  if (filtered.length === coupons.length) return false;
-  writeCoupons(filtered);
-  return true;
-}
-
-export function validateCoupon(
+export async function validateCoupon(
   code: string,
   cartTotal: number
-): { valid: boolean; discount: number; finalTotal: number; error?: string } {
-  const coupon = getCouponByCode(code);
+): Promise<{ valid: boolean; discount: number; finalTotal: number; error?: string; coupon?: CouponData }> {
+  const coupon = await getCouponByCode(code);
 
   if (!coupon) {
     return { valid: false, discount: 0, finalTotal: cartTotal, error: "Invalid coupon code" };
@@ -85,7 +85,7 @@ export function validateCoupon(
     return { valid: false, discount: 0, finalTotal: cartTotal, error: "This coupon has expired" };
   }
 
-  if (coupon.usedCount >= coupon.maxUses) {
+  if (coupon.maxUses > 0 && coupon.usedCount >= coupon.maxUses) {
     return { valid: false, discount: 0, finalTotal: cartTotal, error: "This coupon has reached its usage limit" };
   }
 
@@ -108,14 +108,12 @@ export function validateCoupon(
   discount = Math.min(discount, cartTotal);
   const finalTotal = cartTotal - discount;
 
-  return { valid: true, discount, finalTotal };
+  return { valid: true, discount, finalTotal, coupon };
 }
 
-export function incrementCouponUsage(id: string): void {
-  const coupons = readCoupons();
-  const index = coupons.findIndex((c) => c.id === id);
-  if (index !== -1) {
-    coupons[index].usedCount += 1;
-    writeCoupons(coupons);
-  }
+export async function incrementCouponUsage(id: string): Promise<void> {
+  await prisma.coupon.update({
+    where: { id },
+    data: { usedCount: { increment: 1 } },
+  });
 }

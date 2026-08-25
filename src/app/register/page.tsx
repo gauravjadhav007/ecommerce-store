@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { signIn } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState, Suspense } from "react";
 import { Phone, KeyRound, ArrowLeft, User } from "lucide-react";
@@ -111,13 +110,14 @@ function RegisterForm() {
         return;
       }
 
-      const result = await signIn("credentials", {
-        phone,
-        otpVerified: "true",
-        redirect: false,
+      const result = await fetch("/api/auth/otp-login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ phone }),
       });
+      const loginData = await result.json();
 
-      if (result?.error) {
+      if (!result.ok) {
         router.push(`/login?callbackUrl=${encodeURIComponent(callbackUrl)}`);
       } else {
         router.push(callbackUrl);

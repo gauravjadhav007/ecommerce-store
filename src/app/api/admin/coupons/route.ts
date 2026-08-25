@@ -15,7 +15,7 @@ export async function GET() {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const coupons = getAllCoupons();
+    const coupons = await getAllCoupons();
     return NextResponse.json(coupons);
   } catch {
     return NextResponse.json({ error: "Failed to fetch coupons" }, { status: 500 });
@@ -36,7 +36,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Code, discount type, and value are required" }, { status: 400 });
     }
 
-    const coupon = createCoupon({
+    const coupon = await createCoupon({
       code: code.toUpperCase(),
       discountType,
       value: Number(value),
@@ -64,9 +64,7 @@ export async function PUT(req: NextRequest) {
 
     if (!id) return NextResponse.json({ error: "Coupon ID is required" }, { status: 400 });
 
-    if (data.code) data.code = data.code.toUpperCase();
-
-    const updated = updateCoupon(id, data);
+    const updated = await updateCoupon(id, data);
     if (!updated) return NextResponse.json({ error: "Coupon not found" }, { status: 404 });
 
     return NextResponse.json(updated);
@@ -86,7 +84,7 @@ export async function DELETE(req: NextRequest) {
     const id = searchParams.get("id");
     if (!id) return NextResponse.json({ error: "Coupon ID is required" }, { status: 400 });
 
-    const deleted = deleteCoupon(id);
+    const deleted = await deleteCoupon(id);
     if (!deleted) return NextResponse.json({ error: "Coupon not found" }, { status: 404 });
 
     return NextResponse.json({ success: true });

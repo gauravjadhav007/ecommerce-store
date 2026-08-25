@@ -99,19 +99,21 @@ function LoginForm() {
         return;
       }
 
-      const result = await signIn("credentials", {
-        phone,
-        otpVerified: "true",
-        redirect: false,
+      const loginRes = await fetch("/api/auth/otp-login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ phone }),
       });
+      const loginData = await loginRes.json();
 
-      if (result?.error) {
-        setError(`Login failed: ${result.error}`);
+      if (!loginRes.ok) {
+        setError(loginData.error || "Login failed");
         setLoading(false);
-      } else {
-        router.push(callbackUrl);
-        router.refresh();
+        return;
       }
+
+      router.push(callbackUrl);
+      router.refresh();
     } catch {
       setError("Something went wrong");
     } finally {
@@ -144,19 +146,21 @@ function LoginForm() {
         return;
       }
 
-      const result = await signIn("credentials", {
-        phone,
-        otpVerified: "true",
-        redirect: false,
+      const loginRes = await fetch("/api/auth/otp-login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ phone }),
       });
+      const loginData = await loginRes.json();
 
-      if (result?.error) {
-        setError(`Login failed: ${result.error}`);
+      if (!loginRes.ok) {
+        setError(loginData.error || "Login failed");
         setLoading(false);
-      } else {
-        router.push(callbackUrl);
-        router.refresh();
+        return;
       }
+
+      router.push(callbackUrl);
+      router.refresh();
     } catch {
       setError("Something went wrong");
     } finally {

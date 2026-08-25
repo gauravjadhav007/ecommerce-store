@@ -19,7 +19,15 @@ function decodeToken(token: string): { role?: string } | null {
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
-  const token = request.cookies.get("next-auth.session-token")?.value;
+  const host = request.headers.get("host") || "";
+
+  if (host === "gtshoppingonline.in" && !pathname.startsWith("/api/")) {
+    const wwwUrl = new URL(request.url);
+    wwwUrl.hostname = "www.gtshoppingonline.in";
+    return NextResponse.redirect(wwwUrl, 308);
+  }
+
+  const token = request.cookies.get("__Secure-next-auth.session-token")?.value || request.cookies.get("next-auth.session-token")?.value;
 
   // Allow admin login page without auth
   if (adminLoginRoutes.includes(pathname)) {
@@ -59,5 +67,5 @@ export function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/cart", "/checkout", "/login", "/register", "/admin/:path*"],
+  matcher: ["/((?!_next/static|_next/image|favicon.ico|logo.svg|logo-white.svg|.*\\..*).*)"],
 };

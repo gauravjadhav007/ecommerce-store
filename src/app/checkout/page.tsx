@@ -4,6 +4,7 @@ import { useCart } from "@/stores/cart";
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
+import Script from "next/script";
 import Link from "next/link";
 import { Tag, X, Check, Lock } from "lucide-react";
 
@@ -252,6 +253,8 @@ export default function CheckoutPage() {
   };
 
   return (
+    <>
+    <Script src="https://checkout.razorpay.com/v1/checkout.js" strategy="afterInteractive" />
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
       <h1 className="text-xl sm:text-2xl font-bold mb-6 sm:mb-8">Checkout</h1>
 
@@ -487,5 +490,6 @@ export default function CheckoutPage() {
         </div>
       </form>
     </div>
+    </>
   );
 }

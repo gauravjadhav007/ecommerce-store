@@ -206,3 +206,20 @@ model Otp {
   @@index([phone])
   @@map("otps")
 }
+
+model Coupon {
+  id           String   @id @default(cuid())
+  code         String   @unique
+  discountType String
+  value        Int
+  minOrder     Int      @default(0)
+  maxUses      Int      @default(0)
+  usedCount    Int      @default(0)
+  expiresAt    DateTime
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([code])
+  @@map("coupons")
+}

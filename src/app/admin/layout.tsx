@@ -3,14 +3,15 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState, useEffect } from "react";
-import { LayoutDashboard, Package, ShoppingCart, Users, FolderOpen, Menu, X, Tag, AlertTriangle } from "lucide-react";
+import { LayoutDashboard, Package, ShoppingCart, Users, FolderOpen, Menu, X, Tag, AlertTriangle, BarChart3 } from "lucide-react";
 
 const links = [
   { href: "/admin", label: "Dashboard", icon: LayoutDashboard },
   { href: "/admin/products", label: "Products", icon: Package },
   { href: "/admin/categories", label: "Categories", icon: FolderOpen },
   { href: "/admin/orders", label: "Orders", icon: ShoppingCart },
-  { href: "/admin/users", label: "Users", icon: Users },
+  { href: "/admin/inventory", label: "Inventory", icon: BarChart3 },
+  { href: "/admin/users", label: "Customers", icon: Users },
   { href: "/admin/coupons", label: "Coupons", icon: Tag },
 ];
 
@@ -69,7 +70,7 @@ export default function AdminLayout({
                 >
                   <Icon size={18} />
                   <span className="flex-1">{link.label}</span>
-                  {link.href === "/admin" && lowStockCount > 0 && (
+                  {link.href === "/admin/inventory" && lowStockCount > 0 && (
                     <span className="inline-flex items-center justify-center w-5 h-5 text-[10px] font-bold bg-orange-500 text-white rounded-full">
                       {lowStockCount}
                     </span>
@@ -101,7 +102,7 @@ export default function AdminLayout({
                 >
                   <Icon size={18} />
                   <span className="flex-1">{link.label}</span>
-                  {link.href === "/admin" && lowStockCount > 0 && (
+                  {link.href === "/admin/inventory" && lowStockCount > 0 && (
                     <span className="inline-flex items-center justify-center w-5 h-5 text-[10px] font-bold bg-orange-500 text-white rounded-full">
                       {lowStockCount}
                     </span>
