@@ -4,7 +4,7 @@ import Link from "next/link";
 import { signIn } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState, Suspense } from "react";
-import { Phone, KeyRound, ArrowLeft, User, MessageCircle } from "lucide-react";
+import { Phone, KeyRound, ArrowLeft, User } from "lucide-react";
 
 function RegisterForm() {
   const router = useRouter();
@@ -17,7 +17,6 @@ function RegisterForm() {
   const [phone, setPhone] = useState("");
   const [otp, setOtp] = useState("");
   const [otpCode, setOtpCode] = useState("");
-  const [whatsappUrl, setWhatsappUrl] = useState("");
   const [name, setName] = useState("");
 
   const handleSendOtp = async (e: React.FormEvent) => {
@@ -46,7 +45,6 @@ function RegisterForm() {
       }
 
       setOtpCode(data.otp);
-      setWhatsappUrl(data.whatsappUrl || "");
       setStep("otp");
     } catch {
       setError("Something went wrong");
@@ -185,18 +183,6 @@ function RegisterForm() {
 
       {step === "otp" && (
         <div className="space-y-4">
-          {whatsappUrl && (
-            <a
-              href={whatsappUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="w-full bg-green-500 text-white py-3 rounded-lg font-semibold hover:bg-green-600 transition-colors text-sm sm:text-base flex items-center justify-center gap-2"
-            >
-              <MessageCircle className="w-5 h-5" />
-              Open WhatsApp to Get OTP
-            </a>
-          )}
-
           <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 text-center">
             <p className="text-xs text-amber-600 font-medium">
               Development Mode — Use OTP: <span className="font-mono font-bold text-amber-800 text-sm">123456</span>

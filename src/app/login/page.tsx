@@ -4,7 +4,7 @@ import Link from "next/link";
 import { signIn } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState, Suspense } from "react";
-import { AlertTriangle, Phone, KeyRound, ArrowLeft, UserPlus, MessageCircle } from "lucide-react";
+import { AlertTriangle, Phone, KeyRound, ArrowLeft, UserPlus } from "lucide-react";
 
 function LoginForm() {
   const router = useRouter();
@@ -270,7 +270,6 @@ function LoginForm() {
                 setStep("phone");
                 setOtp("");
                 setOtpCode("");
-                setWhatsappUrl("");
                 setError("");
               }}
               className="w-full text-gray-500 py-2 text-sm font-medium flex items-center justify-center gap-1 hover:text-gray-700"
