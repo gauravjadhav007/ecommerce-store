@@ -223,3 +223,13 @@ model Coupon {
   @@index([code])
   @@map("coupons")
 }
+
+model StoreSettings {
+  id             String   @id @default(cuid())
+  key            String   @unique
+  value          String
+  updatedAt      DateTime @updatedAt
+
+  @@index([key])
+  @@map("store_settings")
+}

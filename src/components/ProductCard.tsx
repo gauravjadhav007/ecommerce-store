@@ -3,9 +3,9 @@
 import Link from "next/link";
 import { useCart } from "@/stores/cart";
 import { ShoppingBag, Heart } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { parseImages } from "@/lib/utils";
 import { useWishlist } from "@/stores/wishlist";
-import { useState } from "react";
 
 interface ProductCardProps {
   product: {
@@ -24,8 +24,8 @@ export default function ProductCard({ product }: ProductCardProps) {
   const addItem = useCart((s) => s.addItem);
   const { toggleItem, isInWishlist } = useWishlist();
   const images = parseImages(product.images);
-  const [added, setAdded] = useState(false);
   const inWishlist = isInWishlist(product.id);
+  const router = useRouter();
 
   const handleAddToCart = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -38,8 +38,7 @@ export default function ProductCard({ product }: ProductCardProps) {
       image: images[0] || null,
       stock: product.stock,
     });
-    setAdded(true);
-    setTimeout(() => setAdded(false), 1500);
+    router.push("/cart");
   };
 
   const handleToggleWishlist = (e: React.MouseEvent) => {
@@ -107,9 +106,6 @@ export default function ProductCard({ product }: ProductCardProps) {
             </span>
           )}
         </div>
-        {added && (
-          <span className="text-[10px] sm:text-xs text-green-600 font-medium">Added!</span>
-        )}
       </div>
     </Link>
   );

@@ -3,6 +3,7 @@
 import { useCart } from "@/stores/cart";
 import { ShoppingBag, Plus, Minus } from "lucide-react";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 
 interface AddToCartButtonProps {
   product: {
@@ -17,13 +18,12 @@ interface AddToCartButtonProps {
 
 export default function AddToCartButton({ product }: AddToCartButtonProps) {
   const [quantity, setQuantity] = useState(1);
-  const [added, setAdded] = useState(false);
   const addItem = useCart((s) => s.addItem);
+  const router = useRouter();
 
   const handleAdd = () => {
     addItem(product, quantity);
-    setAdded(true);
-    setTimeout(() => setAdded(false), 2000);
+    router.push("/cart");
   };
 
   return (
@@ -49,7 +49,7 @@ export default function AddToCartButton({ product }: AddToCartButtonProps) {
           className="flex-1 bg-gray-900 text-white py-3 px-4 sm:px-6 rounded-lg font-semibold hover:bg-gray-700 transition-colors flex items-center justify-center gap-2 min-h-[44px]"
         >
           <ShoppingBag size={18} />
-          {added ? "Added!" : "Add to Cart"}
+          Add to Cart
         </button>
       </div>
     </div>

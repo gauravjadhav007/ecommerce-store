@@ -6,6 +6,7 @@ import { useWishlist } from "@/stores/wishlist";
 import { parseImages } from "@/lib/utils";
 import { useState } from "react";
 import { Zap, Heart } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 interface ProductCardProps {
   product: {
@@ -30,8 +31,8 @@ export default function FeaturedProductCard({ product }: ProductCardProps) {
   const [selectedVariant, setSelectedVariant] = useState(
     product.variants[0] || null
   );
-  const [added, setAdded] = useState(false);
   const inWishlist = isInWishlist(product.id);
+  const router = useRouter();
 
   const currentPrice = selectedVariant ? selectedVariant.price : product.price;
   const discount =
@@ -54,8 +55,7 @@ export default function FeaturedProductCard({ product }: ProductCardProps) {
       variantId: selectedVariant?.id,
       variantName: selectedVariant?.name,
     });
-    setAdded(true);
-    setTimeout(() => setAdded(false), 1500);
+    router.push("/cart");
   };
 
   const handleToggleWishlist = (e: React.MouseEvent) => {
@@ -162,7 +162,7 @@ export default function FeaturedProductCard({ product }: ProductCardProps) {
           onClick={handleAddToCart}
           className="w-full bg-blue-600 text-white py-2.5 rounded-lg text-sm font-semibold hover:bg-blue-700 transition-colors"
         >
-          {added ? "Added!" : "Add to Cart"}
+          Add to Cart
         </button>
 
         {/* Feature Tags */}
