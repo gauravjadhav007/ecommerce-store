@@ -17,7 +17,6 @@ function LoginForm() {
   const [phone, setPhone] = useState("");
   const [otp, setOtp] = useState("");
   const [otpCode, setOtpCode] = useState("");
-  const [whatsappUrl, setWhatsappUrl] = useState("");
   const [isNewUser, setIsNewUser] = useState(false);
 
   const [firstName, setFirstName] = useState("");
@@ -61,7 +60,6 @@ function LoginForm() {
       }
 
       setOtpCode(data.otp);
-      setWhatsappUrl(data.whatsappUrl || "");
       setStep("otp");
     } catch {
       setError("Something went wrong");
@@ -233,19 +231,6 @@ function LoginForm() {
 
       {step === "otp" && (
         <div className="space-y-4">
-          {/* WhatsApp OTP button */}
-          {whatsappUrl && (
-            <a
-              href={whatsappUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="w-full bg-green-500 text-white py-3 rounded-lg font-semibold hover:bg-green-600 transition-colors text-sm sm:text-base flex items-center justify-center gap-2"
-            >
-              <MessageCircle className="w-5 h-5" />
-              Open WhatsApp to Get OTP
-            </a>
-          )}
-
           <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 text-center">
             <p className="text-xs text-amber-600 font-medium">
               Development Mode — Use OTP: <span className="font-mono font-bold text-amber-800 text-sm">123456</span>
