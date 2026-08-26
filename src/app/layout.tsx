@@ -20,18 +20,21 @@ export const metadata: Metadata = {
     default: "GT Shop - Quality Products at Honest Prices",
     template: "%s | GT Shop",
   },
-  description: "Curated products for modern living. Free delivery on orders above ₹499. Secure payments. Easy returns. Flat 20% OFF on Your First Order Use code: GTSHOP20",
-  keywords: ["online shopping", "GT Shop", "buy online", "home products", "kitchen", "lifestyle"],
+  description: "Shop quality clothing, electronics, accessories, footwear and home products at GT Shop. Great prices, secure checkout, free delivery above ₹499 and easy 7-day returns.",
+  keywords: ["online shopping", "GT Shop", "buy online", "home products", "kitchen", "lifestyle", "clothing", "electronics"],
   authors: [{ name: "GT Shop" }],
   creator: "GT Shop",
   metadataBase: new URL("https://gtshoppingonline.in"),
+  alternates: {
+    canonical: "https://gtshoppingonline.in",
+  },
   openGraph: {
     type: "website",
     locale: "en_IN",
     url: "https://gtshoppingonline.in",
     siteName: "GT Shop",
     title: "GT Shop - Quality Products at Honest Prices",
-    description: "Curated products for modern living. Free delivery on orders above ₹499. Secure payments. Easy returns.",
+    description: "Quality products at honest prices. Free delivery on orders above ₹499.",
     images: [
       {
         url: "/logo.png",
@@ -44,15 +47,16 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary_large_image",
     title: "GT Shop - Quality Products at Honest Prices",
-    description: "Curated products for modern living. Free delivery on orders above ₹499.",
+    description: "Quality products at honest prices. Free delivery on orders above ₹499.",
     images: ["/logo.png"],
   },
   icons: {
     icon: [
       { url: "/favicon.svg", type: "image/svg+xml" },
+      { url: "/favicon.png", type: "image/png", sizes: "512x512" },
     ],
     apple: [
-      { url: "/logo.png" },
+      { url: "/favicon.png", sizes: "512x512" },
     ],
   },
   robots: {
@@ -75,10 +79,51 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <head>
-        <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
-        <link rel="apple-touch-icon" href="/logo.png" />
+        <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+        <link rel="icon" type="image/png" href="/favicon.png" />
+        <link rel="apple-touch-icon" href="/favicon.png" />
         <link rel="manifest" href="/site.webmanifest" />
+        <link rel="canonical" href="https://gtshoppingonline.in" />
         <meta name="theme-color" content="#2563eb" />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "WebSite",
+              "name": "GT Shop",
+              "alternateName": ["GT SHOP", "GT Shopping Online", "GT Dhop Online"],
+              "url": "https://gtshoppingonline.in",
+              "potentialAction": {
+                "@type": "SearchAction",
+                "target": {
+                  "@type": "EntryPoint",
+                  "urlTemplate": "https://gtshoppingonline.in/products?search={search_term_string}"
+                },
+                "query-input": "required name=search_term_string"
+              }
+            }),
+          }}
+        />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "Organization",
+              "@id": "https://gtshoppingonline.in/#organization",
+              "name": "GT Shop",
+              "url": "https://gtshoppingonline.in",
+              "logo": {
+                "@type": "ImageObject",
+                "url": "https://gtshoppingonline.in/logo.png",
+                "width": 1200,
+                "height": 630
+              },
+              "description": "Curated products for modern living. Free delivery on orders above ₹499."
+            }),
+          }}
+        />
       </head>
       <body className="min-h-full flex flex-col">
         <GoogleAnalytics />

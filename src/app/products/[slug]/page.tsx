@@ -60,6 +60,51 @@ export default async function ProductDetailPage({
       : 0;
 
   return (
+    <>
+    <script
+      type="application/ld+json"
+      dangerouslySetInnerHTML={{
+        __html: JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "Product",
+          "name": product.name,
+          "image": images,
+          "description": product.description || `${product.name} - Quality products at honest prices`,
+          "sku": product.id,
+          "brand": {
+            "@type": "Brand",
+            "name": "GT Shop"
+          },
+          "offers": {
+            "@type": "Offer",
+            "url": `https://gtshoppingonline.in/products/${product.slug}`,
+            "priceCurrency": "INR",
+            "price": (product.price / 100).toFixed(2),
+            "availability": product.stock > 0 ? "https://schema.org/InStock" : "https://schema.org/OutOfStock"
+          },
+          "aggregateRating": product.reviews.length > 0 ? {
+            "@type": "AggregateRating",
+            "ratingValue": avgRating.toFixed(1),
+            "reviewCount": product.reviews.length
+          } : undefined
+        }),
+      }}
+    />
+    <script
+      type="application/ld+json"
+      dangerouslySetInnerHTML={{
+        __html: JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "BreadcrumbList",
+          "itemListElement": [
+            { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://gtshoppingonline.in" },
+            { "@type": "ListItem", "position": 2, "name": "Products", "item": "https://gtshoppingonline.in/products" },
+            ...(product.category ? [{ "@type": "ListItem", "position": 3, "name": product.category.name, "item": `https://gtshoppingonline.in/products?category=${product.category.slug}` }] : []),
+            { "@type": "ListItem", "position": product.category ? 4 : 3, "name": product.name }
+          ]
+        }),
+      }}
+    />
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
       <nav className="text-xs sm:text-sm text-gray-500 mb-4 sm:mb-6 overflow-x-auto whitespace-nowrap">
         <Link href="/" className="hover:text-gray-900">
@@ -212,5 +257,6 @@ export default async function ProductDetailPage({
       {/* Reviews */}
       <ReviewSection productId={product.id} />
     </div>
+    </>
   );
 }
