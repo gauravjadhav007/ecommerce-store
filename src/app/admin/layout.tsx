@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState, useEffect } from "react";
-import { LayoutDashboard, Package, ShoppingCart, Users, FolderOpen, Menu, X, Tag, AlertTriangle, BarChart3, CreditCard } from "lucide-react";
+import { LayoutDashboard, Package, ShoppingCart, Users, FolderOpen, Menu, X, Tag, AlertTriangle, BarChart3 } from "lucide-react";
 
 const links = [
   { href: "/admin", label: "Dashboard", icon: LayoutDashboard },
@@ -15,32 +15,6 @@ const links = [
   { href: "/admin/coupons", label: "Coupons", icon: Tag },
 ];
 
-function PaymentModeToggle({ paymentMode, onToggle }: { paymentMode: string; onToggle: (mode: string) => void }) {
-  const isLive = paymentMode === "live";
-  return (
-    <div className="mx-3 p-3 bg-white border border-gray-200 rounded-lg">
-      <div className="flex items-center gap-2 mb-2">
-        <CreditCard size={14} className="text-gray-500" />
-        <span className="text-xs font-medium text-gray-700">Payment Gateway</span>
-      </div>
-      <div className="flex items-center justify-between">
-        <span className={`text-xs font-medium ${!isLive ? "text-blue-600" : "text-gray-400"}`}>Test</span>
-        <button
-          onClick={() => onToggle(isLive ? "test" : "live")}
-          className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-            isLive ? "bg-green-500" : "bg-gray-300"
-          }`}
-        >
-          <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-            isLive ? "translate-x-6" : "translate-x-1"
-          }`} />
-        </button>
-        <span className={`text-xs font-medium ${isLive ? "text-green-600" : "text-gray-400"}`}>Live</span>
-      </div>
-    </div>
-  );
-}
-
 export default function AdminLayout({
   children,
 }: {
@@ -49,28 +23,13 @@ export default function AdminLayout({
   const pathname = usePathname();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [lowStockCount, setLowStockCount] = useState(0);
-  const [paymentMode, setPaymentMode] = useState("test");
 
   useEffect(() => {
     fetch("/api/admin/inventory")
       .then((r) => r.json())
       .then((data) => { if (Array.isArray(data)) setLowStockCount(data.length); })
       .catch(() => {});
-
-    fetch("/api/admin/settings")
-      .then((r) => r.json())
-      .then((data) => { if (data.paymentMode) setPaymentMode(data.paymentMode); })
-      .catch(() => {});
   }, []);
-
-  const handleTogglePayment = async (mode: string) => {
-    await fetch("/api/admin/settings", {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ paymentMode: mode }),
-    });
-    setPaymentMode(mode);
-  };
 
   if (pathname === "/admin/login") {
     return <>{children}</>;
@@ -113,9 +72,6 @@ export default function AdminLayout({
                 </Link>
               );
             })}
-            <div className="pt-2">
-              <PaymentModeToggle paymentMode={paymentMode} onToggle={handleTogglePayment} />
-            </div>
           </nav>
         )}
       </div>
@@ -148,17 +104,14 @@ export default function AdminLayout({
             })}
           </nav>
 
-          <div className="space-y-3 mt-4">
-            <PaymentModeToggle paymentMode={paymentMode} onToggle={handleTogglePayment} />
-            {lowStockCount > 0 && (
-              <div className="mx-3 p-3 bg-orange-50 border border-orange-200 rounded-lg">
-                <div className="flex items-center gap-2 text-orange-700">
-                  <AlertTriangle size={14} />
-                  <span className="text-xs font-medium">{lowStockCount} product{lowStockCount !== 1 ? "s" : ""} low on stock</span>
-                </div>
+          {lowStockCount > 0 && (
+            <div className="mx-3 p-3 bg-orange-50 border border-orange-200 rounded-lg mt-4">
+              <div className="flex items-center gap-2 text-orange-700">
+                <AlertTriangle size={14} />
+                <span className="text-xs font-medium">{lowStockCount} product{lowStockCount !== 1 ? "s" : ""} low on stock</span>
               </div>
-            )}
-          </div>
+            </div>
+          )}
         </aside>
 
         {/* Main Content */}

@@ -12,16 +12,15 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const code = await generateOtp(phone);
+    await generateOtp(phone);
 
     return NextResponse.json({
       success: true,
       message: `OTP sent to ${phone}`,
-      otp: code,
     });
   } catch {
     return NextResponse.json(
-      { error: "Failed to send OTP" },
+      { error: "Failed to send OTP. Please try again." },
       { status: 500 }
     );
   }
