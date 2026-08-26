@@ -49,9 +49,13 @@ export default function Header() {
             </button>
           </div>
 
-          {/* Logo */}
-          <Link href="/" className="flex-shrink-0">
-            <img src="/logo.svg" alt="GT Shop" className="h-10 md:h-12 w-auto" />
+          {/* Logo + Store Name */}
+          <Link href="/" className="flex-shrink-0 flex items-center gap-2">
+            <img src="/favicon.svg" alt="GT Shop" className="h-8 md:h-9 w-auto" />
+            <div className="hidden sm:flex flex-col leading-none">
+              <span className="text-lg md:text-xl font-black text-gray-900 tracking-tight">GT Shop</span>
+              <span className="text-[9px] md:text-[10px] text-gray-400 tracking-widest uppercase">Buy · Shop · Smile</span>
+            </div>
           </Link>
 
           {/* Desktop nav */}
