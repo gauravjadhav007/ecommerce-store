@@ -13,7 +13,7 @@ function RegisterForm() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const [step, setStep] = useState<"email" | "otp" | "details">(prefilledEmail ? "otp" : "email");
+  const [step, setStep] = useState<"email" | "otp" | "details">(prefilledEmail ? "details" : "email");
   const [email, setEmail] = useState(prefilledEmail);
   const [otp, setOtp] = useState("");
   const [name, setName] = useState("");
@@ -182,7 +182,7 @@ function RegisterForm() {
         </form>
       )}
 
-      {step === "otp" && (
+        {step === "otp" && (
         <div className="space-y-4">
           {prefilledEmail && (
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 text-center">
