@@ -96,7 +96,7 @@ function RegisterForm() {
       return;
     }
 
-    if (!/^[6-9]\d{9}$/.test(phone)) {
+    if (phone && !/^[6-9]\d{9}$/.test(phone)) {
       setError("Enter a valid 10-digit mobile number");
       setLoading(false);
       return;
@@ -106,7 +106,7 @@ function RegisterForm() {
       const res = await fetch("/api/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ phone, name: name.trim(), email }),
+        body: JSON.stringify({ phone: phone || undefined, name: name.trim(), email }),
       });
       const data = await res.json();
 
@@ -262,7 +262,7 @@ function RegisterForm() {
 
           <div>
             <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1">
-              Mobile Number *
+              Mobile Number (optional)
             </label>
             <div className="flex">
               <span className="flex items-center px-3 bg-gray-100 border border-r-0 border-gray-300 rounded-l-lg text-sm text-gray-600">
@@ -272,7 +272,6 @@ function RegisterForm() {
                 type="tel"
                 value={phone}
                 onChange={(e) => setPhone(e.target.value.replace(/\D/g, "").slice(0, 10))}
-                required
                 placeholder="9876543210"
                 maxLength={10}
                 autoComplete="tel-national"
