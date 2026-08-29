@@ -29,6 +29,7 @@ export async function POST(req: NextRequest) {
     }
 
     const token = await new SignJWT({
+      sub: user.id,
       id: user.id,
       role: user.role,
       phone: user.phone,

@@ -69,7 +69,10 @@ export default function AccountPage() {
     );
   }
 
-  if (!session) return null;
+  if (!session) {
+    router.push("/login?callbackUrl=/account");
+    return null;
+  }
 
   const initials = [profile.firstName, profile.lastName]
     .map((n) => n?.charAt(0))

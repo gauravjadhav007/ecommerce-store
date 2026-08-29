@@ -1,5 +1,6 @@
 import { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
+import { jwtVerify } from "jose";
 import prisma from "./prisma";
 import bcrypt from "bcryptjs";
 
@@ -37,6 +38,7 @@ declare module "next-auth/jwt" {
 }
 
 export const authOptions: NextAuthOptions = {
+  secret: process.env.NEXTAUTH_SECRET,
   providers: [
     CredentialsProvider({
       name: "email",
@@ -112,6 +114,21 @@ export const authOptions: NextAuthOptions = {
     }),
   ],
   session: { strategy: "jwt" },
+  jwt: {
+    decode: async ({ token, secret }) => {
+      try {
+        if (!token || !secret) return null;
+        const secretKey = typeof secret === "string" ? secret : secret.toString();
+        const { payload } = await jwtVerify(
+          token,
+          new TextEncoder().encode(secretKey)
+        );
+        return payload as any;
+      } catch {
+        return null;
+      }
+    },
+  },
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
