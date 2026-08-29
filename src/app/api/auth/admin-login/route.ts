@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import bcrypt from "bcryptjs";
+import { SignJWT } from "jose";
+
+const secret = new TextEncoder().encode(process.env.NEXTAUTH_SECRET);
 
 export async function POST(req: NextRequest) {
   try {
@@ -25,23 +28,22 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Not authorized as admin" }, { status: 403 });
     }
 
-    // Create a simple base64 payload the middleware can decode
-    const payload = {
-      sub: user.id,
+    const token = await new SignJWT({
       id: user.id,
-      name: user.name,
-      email: user.email,
-      phone: user.phone,
       role: user.role,
+      phone: user.phone,
       firstName: user.firstName,
       lastName: user.lastName,
       gender: user.gender,
       dob: user.dob?.toISOString() || null,
-      iat: Math.floor(Date.now() / 1000),
-      exp: Math.floor(Date.now() / 1000) + 30 * 24 * 60 * 60,
-    };
-
-    const token = Buffer.from(JSON.stringify(payload)).toString("base64url");
+      name: user.name,
+      email: user.email,
+      picture: user.image,
+    })
+      .setProtectedHeader({ alg: "HS256" })
+      .setIssuedAt()
+      .setExpirationTime("30d")
+      .sign(secret);
 
     const response = NextResponse.json({ success: true });
 
@@ -53,7 +55,6 @@ export async function POST(req: NextRequest) {
       maxAge: 30 * 24 * 60 * 60,
     });
 
-    // Also set the __Secure version for production
     response.cookies.set("__Secure-next-auth.session-token", token, {
       httpOnly: true,
       secure: true,
