@@ -1,48 +1,5 @@
 import prisma from "./prisma";
 
-const MSG91_AUTH_KEY = process.env.MSG91_AUTH_KEY;
-const MSG91_FLOW_ID_SIGNUP = process.env.MSG91_FLOW_ID_SIGNUP;
-const MSG91_FLOW_ID_LOGIN = process.env.MSG91_FLOW_ID_LOGIN;
-
-const MSG91_FLOW_URL = "https://control.msg91.com/api/v5/flow";
-
-async function sendSms(phone: string, otp: string, purpose: "login" | "signup"): Promise<boolean> {
-  if (!MSG91_AUTH_KEY) {
-    console.error(`[OTP] MSG91_AUTH_KEY not configured! Cannot send SMS to ${phone}`);
-    return false;
-  }
-
-  const flowId = purpose === "login" ? MSG91_FLOW_ID_LOGIN : MSG91_FLOW_ID_SIGNUP;
-
-  try {
-    const res = await fetch(MSG91_FLOW_URL, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        authkey: MSG91_AUTH_KEY ?? "",
-      },
-      body: JSON.stringify({
-        flow_id: flowId,
-        sender: "GTSHOP",
-        recipients: [{ mobiles: [`91${phone}`], var: otp }],
-      }),
-    });
-
-    const data = await res.json();
-    console.log(`[OTP][MSG91] ${phone} -> status: ${res.status}`, JSON.stringify(data));
-
-    if (res.ok && (data.type === "success" || data.message === "OTP Sent")) {
-      return true;
-    }
-
-    console.error(`[OTP][MSG91] Failed for ${phone}:`, data);
-    return false;
-  } catch (err) {
-    console.error(`[OTP][MSG91] Network error sending to ${phone}:`, err);
-    return false;
-  }
-}
-
 function generateRandomOtp(): string {
   return Math.floor(100000 + Math.random() * 900000).toString();
 }
@@ -57,18 +14,6 @@ export async function createOtp(identifier: string): Promise<string> {
       expires: new Date(Date.now() + 10 * 60 * 1000),
     },
   });
-  return code;
-}
-
-export async function generateOtp(phone: string, purpose: "login" | "signup" = "login"): Promise<string> {
-  const code = await createOtp(phone);
-
-  const sent = await sendSms(phone, code, purpose);
-
-  if (!sent) {
-    throw new Error("Failed to send OTP via MSG91");
-  }
-
   return code;
 }
 

@@ -73,45 +73,6 @@ export const authOptions: NextAuthOptions = {
         }
       },
     }),
-    CredentialsProvider({
-      name: "credentials",
-      credentials: {
-        phone: { label: "Phone", type: "text" },
-        otpVerified: { label: "OTP Verified", type: "text" },
-      },
-      async authorize(credentials) {
-        if (!credentials?.phone || credentials.otpVerified !== "true") return null;
-
-        const phone = credentials.phone;
-
-        try {
-          let user = await prisma.user.findUnique({
-            where: { phone },
-          });
-
-          if (!user) {
-            user = await prisma.user.create({
-              data: {
-                phone,
-                name: `User ${phone.slice(-4)}`,
-              },
-            });
-          }
-
-          return {
-            id: user.id,
-            name: user.name,
-            email: user.email,
-            image: user.image,
-            role: user.role,
-            phone: user.phone,
-          };
-        } catch (error) {
-          console.error("[AUTH] Authorize error:", error);
-          return null;
-        }
-      },
-    }),
   ],
   session: { strategy: "jwt" },
   jwt: {

@@ -3,16 +3,17 @@ import { verifyOtp } from "@/lib/otp";
 
 export async function POST(req: NextRequest) {
   try {
-    const { phone, code } = await req.json();
+    const { phone, email, code } = await req.json();
+    const identifier = email || phone;
 
-    if (!phone || !code) {
+    if (!identifier || !code) {
       return NextResponse.json(
-        { error: "Phone and OTP code required" },
+        { error: "Email/phone and OTP code required" },
         { status: 400 }
       );
     }
 
-    const valid = await verifyOtp(phone, code);
+    const valid = await verifyOtp(identifier, code);
     if (!valid) {
       return NextResponse.json(
         { error: "Invalid or expired OTP" },
