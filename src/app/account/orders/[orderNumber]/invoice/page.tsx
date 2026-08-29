@@ -117,7 +117,7 @@ export default function InvoicePage() {
         {/* Header */}
         <div className="flex flex-col sm:flex-row justify-between items-start gap-6 mb-8 sm:mb-10 pb-6 sm:pb-8 border-b border-gray-200">
           <div>
-            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">GT Shop</h1>
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">GT SHOP</h1>
             <p className="text-sm text-gray-500 mt-1">Quality Products at Honest Prices</p>
             <p className="text-xs text-gray-400 mt-0.5">gtshoppingonline.in</p>
           </div>
@@ -234,7 +234,7 @@ export default function InvoicePage() {
 
         {/* Footer */}
         <div className="text-center text-xs text-gray-400 pt-6 border-t border-gray-100">
-          <p>Thank you for shopping with GT Shop!</p>
+          <p>Thank you for shopping with GT SHOP!</p>
           <p className="mt-1">For queries, contact us at gtshoppingonline.in</p>
         </div>
       </div>

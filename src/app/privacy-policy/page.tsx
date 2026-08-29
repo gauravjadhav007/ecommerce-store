@@ -1,6 +1,6 @@
 export const metadata = {
-  title: "Privacy Policy | GT Shop",
-  description: "Learn how GT Shop collects, uses, and protects your personal information.",
+  title: "Privacy Policy | GT SHOP",
+  description: "Learn how GT SHOP collects, uses, and protects your personal information.",
 };
 
 export default function PrivacyPolicyPage() {
@@ -14,7 +14,7 @@ export default function PrivacyPolicyPage() {
           <section>
             <h2 className="text-lg font-bold text-gray-900 mb-3">Information We Collect</h2>
             <p className="text-gray-600 leading-relaxed">
-              When you use GT Shop, we collect information you provide directly, including your name, email address, shipping address, and payment details when you place an order.
+              When you use GT SHOP, we collect information you provide directly, including your name, email address, shipping address, and payment details when you place an order.
             </p>
           </section>
 

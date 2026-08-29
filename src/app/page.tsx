@@ -267,7 +267,7 @@ export default async function HomePage() {
                 No shortcuts. No compromises. Just honest, quality shopping.
               </p>
               <p className="text-sm font-semibold text-gray-900 mb-6">
-                Team GT Shop
+                Team GT SHOP
               </p>
               <Link
                 href="/products"
@@ -349,7 +349,7 @@ export default async function HomePage() {
       <section className="py-14 sm:py-16 bg-white">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-3">
-            Love GT Shop?
+            Love GT SHOP?
           </h2>
           <p className="text-gray-500 mb-6">
             Share with friends & they get 20% off!

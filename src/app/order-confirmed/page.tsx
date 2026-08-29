@@ -105,7 +105,7 @@ function OrderConfirmed() {
           {isDigital ? "Your order is complete!" : "Order Confirmed!"}
         </h1>
         <p className="text-sm sm:text-base text-gray-500">
-          Thank you for purchasing from GT Shop
+          Thank you for purchasing from GT SHOP
         </p>
       </div>
 

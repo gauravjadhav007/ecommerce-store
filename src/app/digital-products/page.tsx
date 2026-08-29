@@ -4,7 +4,7 @@ import { parseImages } from "@/lib/utils";
 import { Download, Zap } from "lucide-react";
 
 export const metadata = {
-  title: "Digital Products | GT Shop",
+  title: "Digital Products | GT SHOP",
   description: "Ready-to-use templates and tools for small businesses and creators.",
 };
 

@@ -3,7 +3,7 @@ import { generateOtp } from "@/lib/otp";
 
 export async function POST(req: NextRequest) {
   try {
-    const { phone } = await req.json();
+    const { phone, purpose = "login" } = await req.json();
 
     if (!phone || !/^[6-9]\d{9}$/.test(phone)) {
       return NextResponse.json(
@@ -12,7 +12,14 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    await generateOtp(phone);
+    if (purpose !== "login" && purpose !== "signup") {
+      return NextResponse.json(
+        { error: "Purpose must be 'login' or 'signup'" },
+        { status: 400 }
+      );
+    }
+
+    await generateOtp(phone, purpose);
 
     return NextResponse.json({
       success: true,

@@ -158,8 +158,8 @@ export default function AdminOrdersPage() {
         )}
       </div>
 
-      {/* Orders Table */}
-      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+      {/* Desktop Table */}
+      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden hidden md:block">
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
@@ -169,7 +169,7 @@ export default function AdminOrdersPage() {
                 <th className="px-6 py-3 hidden lg:table-cell">Items</th>
                 <th className="px-6 py-3">Total</th>
                 <th className="px-6 py-3">Status</th>
-                <th className="px-6 py-3 hidden sm:table-cell">Date</th>
+                <th className="px-6 py-3">Date</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-50">
@@ -198,7 +198,7 @@ export default function AdminOrdersPage() {
                       ))}
                     </select>
                   </td>
-                  <td className="px-6 py-4 text-xs text-gray-500 hidden sm:table-cell">
+                  <td className="px-6 py-4 text-xs text-gray-500">
                     {new Date(order.createdAt).toLocaleDateString("en-IN")}
                   </td>
                 </tr>
@@ -206,6 +206,39 @@ export default function AdminOrdersPage() {
             </tbody>
           </table>
         </div>
+      </div>
+
+      {/* Mobile Cards */}
+      <div className="md:hidden space-y-3">
+        {filtered.length === 0 && (
+          <div className="bg-white rounded-xl border border-gray-200 p-8 text-center text-gray-400 text-sm">No orders found</div>
+        )}
+        {filtered.map((order) => (
+          <div key={order.id} className="bg-white rounded-xl border border-gray-200 p-4 cursor-pointer" onClick={() => setSelectedOrder(order)}>
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <div className="text-sm font-semibold">{order.orderNumber}</div>
+                <div className="text-xs text-gray-500">{order.user.name || order.shippingName || "Guest"}</div>
+                <div className="text-xs text-gray-400 mt-0.5">{new Date(order.createdAt).toLocaleDateString("en-IN")}</div>
+              </div>
+              <div className="text-right">
+                <div className="text-sm font-semibold">₹{(order.total / 100).toLocaleString("en-IN")}</div>
+                <div className="text-xs text-gray-500">{order.items.length} item{order.items.length !== 1 ? "s" : ""}</div>
+              </div>
+            </div>
+            <div className="mt-3 pt-3 border-t border-gray-100" onClick={(e) => e.stopPropagation()}>
+              <select
+                value={order.status}
+                onChange={(e) => updateStatus(order.id, e.target.value)}
+                className={`text-xs font-medium rounded-full px-3 py-1.5 border-0 cursor-pointer ${STATUS_COLORS[order.status] || "bg-gray-100 text-gray-600"}`}
+              >
+                {STATUS_OPTIONS.filter(s => s !== "ALL").map((s) => (
+                  <option key={s} value={s}>{s}</option>
+                ))}
+              </select>
+            </div>
+          </div>
+        ))}
       </div>
 
       {/* Order Detail Slide-over */}

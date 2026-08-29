@@ -71,7 +71,7 @@ function CheckoutContent() {
         key: orderData.keyId,
         amount: orderData.amount,
         currency: orderData.currency,
-        name: "GT Shop",
+        name: "GT SHOP",
         description: product.name,
         order_id: orderData.orderId,
         handler: async function (response: any) {

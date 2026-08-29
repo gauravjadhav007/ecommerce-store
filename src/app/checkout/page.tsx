@@ -47,6 +47,24 @@ export default function CheckoutPage() {
 
   useEffect(() => {
     if (session?.user) {
+      const saved = localStorage.getItem(`addresses-${session.user.id}`);
+      if (saved) {
+        const addrs = JSON.parse(saved);
+        const defaultAddr = addrs.find((a: any) => a.isDefault) || addrs[0];
+        if (defaultAddr) {
+          setForm((prev) => ({
+            ...prev,
+            name: prev.name || session.user.name || defaultAddr.name || "",
+            email: prev.email || session.user.email || "",
+            phone: prev.phone || defaultAddr.phone || "",
+            address: prev.address || defaultAddr.address || "",
+            city: prev.city || defaultAddr.city || "",
+            state: prev.state || defaultAddr.state || "",
+            zip: prev.zip || defaultAddr.zip || "",
+          }));
+          return;
+        }
+      }
       setForm((prev) => ({
         ...prev,
         name: prev.name || session.user.name || "",
@@ -195,7 +213,7 @@ export default function CheckoutPage() {
         key: razorpayData.keyId,
         amount: razorpayData.amount,
         currency: razorpayData.currency,
-        name: "GT Shop",
+        name: "GT SHOP",
         description: `Order ${orderNumber}`,
         order_id: razorpayData.orderId,
         handler: async function (response: any) {
@@ -280,6 +298,7 @@ export default function CheckoutPage() {
                     required
                     value={form.name}
                     onChange={(e) => setForm({ ...form, name: e.target.value })}
+                    autoComplete="name"
                     className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 min-h-[44px] text-sm sm:text-base"
                   />
                 </div>
@@ -292,6 +311,7 @@ export default function CheckoutPage() {
                     required
                     value={form.email}
                     onChange={(e) => setForm({ ...form, email: e.target.value })}
+                    autoComplete="email"
                     className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 min-h-[44px] text-sm sm:text-base"
                   />
                 </div>
@@ -309,6 +329,7 @@ export default function CheckoutPage() {
                       const val = e.target.value.replace(/\D/g, "").slice(0, 10);
                       setForm({ ...form, phone: val });
                     }}
+                    autoComplete="tel-national"
                     className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 min-h-[44px] text-sm sm:text-base"
                   />
                 </div>
@@ -328,6 +349,7 @@ export default function CheckoutPage() {
                     required
                     value={form.address}
                     onChange={(e) => setForm({ ...form, address: e.target.value })}
+                    autoComplete="street-address"
                     className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 min-h-[44px] text-sm sm:text-base"
                   />
                 </div>
@@ -360,6 +382,7 @@ export default function CheckoutPage() {
                       required
                       value={form.city}
                       onChange={(e) => setForm({ ...form, city: e.target.value })}
+                      autoComplete="address-level2"
                       className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 min-h-[44px] text-sm sm:text-base"
                     />
                   </div>
@@ -372,6 +395,7 @@ export default function CheckoutPage() {
                       required
                       value={form.state}
                       onChange={(e) => setForm({ ...form, state: e.target.value })}
+                      autoComplete="address-level1"
                       className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 min-h-[44px] text-sm sm:text-base"
                     />
                   </div>

@@ -4,7 +4,7 @@ import Link from "next/link";
 import { SlidersHorizontal, X } from "lucide-react";
 
 export const metadata = {
-  title: "Products | GT Shop",
+  title: "Products | GT SHOP",
 };
 
 export default async function ProductsPage({

@@ -1,6 +1,6 @@
 export const metadata = {
-  title: "Shipping Policy | GT Shop",
-  description: "Learn about GT Shop shipping options, delivery times, and charges.",
+  title: "Shipping Policy | GT SHOP",
+  description: "Learn about GT SHOP shipping options, delivery times, and charges.",
 };
 
 export default function ShippingPolicyPage() {

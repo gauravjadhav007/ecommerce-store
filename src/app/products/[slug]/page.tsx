@@ -18,7 +18,7 @@ export async function generateMetadata({
   if (!product) return { title: "Product Not Found" };
   const images = parseImages(product.images);
   return {
-    title: `${product.name} | GT Shop`,
+    title: `${product.name} | GT SHOP`,
     description:
       product.description?.slice(0, 160) ||
       `${product.name} - Quality products at honest prices`,
@@ -73,7 +73,7 @@ export default async function ProductDetailPage({
           "sku": product.id,
           "brand": {
             "@type": "Brand",
-            "name": "GT Shop"
+            "name": "GT SHOP"
           },
           "offers": {
             "@type": "Offer",

@@ -1,11 +1,13 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Search, X, Users, Shield, User, Mail, Phone, Calendar } from "lucide-react";
+import { Search, X, Users, Shield, User, Mail, Phone, Calendar, Trash2 } from "lucide-react";
 
 interface UserItem {
   id: string;
   name: string | null;
+  firstName: string | null;
+  lastName: string | null;
   email: string;
   phone: string | null;
   role: string;
@@ -18,16 +20,19 @@ export default function AdminUsersPage() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
 
-  useEffect(() => {
+  const fetchUsers = () => {
     fetch("/api/admin/users")
       .then((r) => r.json())
       .then((data) => { setUsers(data); setLoading(false); })
       .catch(() => setLoading(false));
-  }, []);
+  };
+
+  useEffect(() => { fetchUsers(); }, []);
 
   const filtered = users.filter((u) =>
     search === "" ||
     u.name?.toLowerCase().includes(search.toLowerCase()) ||
+    u.firstName?.toLowerCase().includes(search.toLowerCase()) ||
     u.email.toLowerCase().includes(search.toLowerCase()) ||
     u.phone?.includes(search)
   );
@@ -38,8 +43,18 @@ export default function AdminUsersPage() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ id, role }),
     });
-    const res = await fetch("/api/admin/users");
-    setUsers(await res.json());
+    fetchUsers();
+  };
+
+  const deleteUser = async (id: string, name: string) => {
+    if (!confirm(`Delete ${name || "this user"}? This cannot be undone.`)) return;
+    const res = await fetch(`/api/admin/users?id=${id}`, { method: "DELETE" });
+    const data = await res.json();
+    if (res.ok) {
+      fetchUsers();
+    } else {
+      alert(data.error || "Failed to delete user");
+    }
   };
 
   if (loading) {
@@ -50,7 +65,7 @@ export default function AdminUsersPage() {
     <div>
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-bold">Customers</h1>
+          <h1 className="text-xl sm:text-2xl font-bold">Customers</h1>
           <p className="text-sm text-gray-500 mt-1">{filtered.length} customer{filtered.length !== 1 ? "s" : ""}</p>
         </div>
       </div>
@@ -72,16 +87,17 @@ export default function AdminUsersPage() {
         )}
       </div>
 
-      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+      {/* Desktop Table */}
+      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden hidden md:block">
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
               <tr className="text-left text-xs text-gray-500 border-b border-gray-100">
                 <th className="px-6 py-3">Customer</th>
-                <th className="px-6 py-3 hidden md:table-cell">Phone</th>
+                <th className="px-6 py-3">Phone</th>
                 <th className="px-6 py-3">Role</th>
-                <th className="px-6 py-3 hidden sm:table-cell">Orders</th>
-                <th className="px-6 py-3 hidden md:table-cell">Joined</th>
+                <th className="px-6 py-3">Orders</th>
+                <th className="px-6 py-3">Joined</th>
                 <th className="px-6 py-3">Actions</th>
               </tr>
             </thead>
@@ -105,12 +121,12 @@ export default function AdminUsersPage() {
                         )}
                       </div>
                       <div>
-                        <div className="text-sm font-medium">{user.name || "Unnamed"}</div>
+                        <div className="text-sm font-medium">{user.firstName || user.name || "Unnamed"}</div>
                         <div className="text-xs text-gray-500">{user.email}</div>
                       </div>
                     </div>
                   </td>
-                  <td className="px-6 py-4 text-sm text-gray-500 hidden md:table-cell">{user.phone || "—"}</td>
+                  <td className="px-6 py-4 text-sm text-gray-500">{user.phone || "—"}</td>
                   <td className="px-6 py-4">
                     <span className={`inline-flex items-center gap-1 text-xs font-medium px-2.5 py-1 rounded-full ${
                       user.role === "ADMIN" ? "bg-purple-100 text-purple-700" : "bg-blue-100 text-blue-700"
@@ -119,27 +135,86 @@ export default function AdminUsersPage() {
                       {user.role}
                     </span>
                   </td>
-                  <td className="px-6 py-4 text-sm hidden sm:table-cell">
+                  <td className="px-6 py-4 text-sm">
                     <span className="font-medium">{user._count.orders}</span>
                   </td>
-                  <td className="px-6 py-4 text-xs text-gray-500 hidden md:table-cell">
+                  <td className="px-6 py-4 text-xs text-gray-500">
                     {new Date(user.createdAt).toLocaleDateString("en-IN")}
                   </td>
                   <td className="px-6 py-4">
-                    <select
-                      value={user.role}
-                      onChange={(e) => updateRole(user.id, e.target.value)}
-                      className="text-xs border border-gray-200 rounded-lg px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-gray-900"
-                    >
-                      <option value="CUSTOMER">Customer</option>
-                      <option value="ADMIN">Admin</option>
-                    </select>
+                    <div className="flex items-center gap-2">
+                      <select
+                        value={user.role}
+                        onChange={(e) => updateRole(user.id, e.target.value)}
+                        className="text-xs border border-gray-200 rounded-lg px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-gray-900"
+                      >
+                        <option value="CUSTOMER">Customer</option>
+                        <option value="ADMIN">Admin</option>
+                      </select>
+                      <button
+                        onClick={() => deleteUser(user.id, user.firstName || user.name || user.email)}
+                        className="p-2 text-gray-400 hover:text-red-600 rounded-lg hover:bg-red-50 transition-colors"
+                        title="Delete customer"
+                      >
+                        <Trash2 size={14} />
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
+      </div>
+
+      {/* Mobile Cards */}
+      <div className="md:hidden space-y-3">
+        {filtered.length === 0 && (
+          <div className="bg-white rounded-xl border border-gray-200 p-8 text-center text-gray-400 text-sm">
+            No customers found
+          </div>
+        )}
+        {filtered.map((user) => (
+          <div key={user.id} className="bg-white rounded-xl border border-gray-200 p-4">
+            <div className="flex items-start justify-between gap-3">
+              <div className="flex items-center gap-3 flex-1 min-w-0">
+                <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center flex-shrink-0">
+                  {user.role === "ADMIN" ? (
+                    <Shield size={16} className="text-purple-600" />
+                  ) : (
+                    <User size={16} className="text-blue-600" />
+                  )}
+                </div>
+                <div className="min-w-0">
+                  <div className="text-sm font-medium truncate">{user.firstName || user.name || "Unnamed"}</div>
+                  <div className="text-xs text-gray-500 truncate">{user.email}</div>
+                </div>
+              </div>
+              <button
+                onClick={() => deleteUser(user.id, user.firstName || user.name || user.email)}
+                className="p-2 text-gray-400 hover:text-red-600 rounded-lg hover:bg-red-50 flex-shrink-0"
+              >
+                <Trash2 size={14} />
+              </button>
+            </div>
+            <div className="mt-3 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <select
+                  value={user.role}
+                  onChange={(e) => updateRole(user.id, e.target.value)}
+                  className="text-xs border border-gray-200 rounded-lg px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-gray-900"
+                >
+                  <option value="CUSTOMER">Customer</option>
+                  <option value="ADMIN">Admin</option>
+                </select>
+                <span className="text-xs text-gray-400">{user._count.orders} orders</span>
+              </div>
+              <span className="text-[11px] text-gray-400">
+                {new Date(user.createdAt).toLocaleDateString("en-IN")}
+              </span>
+            </div>
+          </div>
+        ))}
       </div>
     </div>
   );

@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
-import { generateOtp } from "@/lib/otp";
+import { createOtp } from "@/lib/otp";
 import { sendOtpEmail } from "@/lib/email";
 
 export async function POST(req: NextRequest) {
   try {
-    const { email } = await req.json();
+    const { email, purpose = "login" } = await req.json();
 
     if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       return NextResponse.json(
@@ -13,8 +13,8 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const code = await generateOtp(email);
-    await sendOtpEmail(email, code);
+    const code = await createOtp(email);
+    await sendOtpEmail(email, code, purpose);
 
     return NextResponse.json({
       success: true,

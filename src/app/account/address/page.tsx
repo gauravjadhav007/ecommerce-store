@@ -123,6 +123,26 @@ export default function AddressPage() {
     persistAddresses(updated);
   };
 
+  const [pincodeLoading, setPincodeLoading] = useState(false);
+
+  const fetchPincode = async (pincode: string) => {
+    if (pincode.length !== 6) return;
+    setPincodeLoading(true);
+    try {
+      const res = await fetch(`https://api.postalpincode.in/pincode/${pincode}`);
+      const data = await res.json();
+      if (data[0].Status === "Success" && data[0].PostOffice?.length > 0) {
+        const po = data[0].PostOffice[0];
+        setForm((prev) => ({
+          ...prev,
+          city: po.District || po.Name,
+          state: po.State,
+        }));
+      }
+    } catch {}
+    setPincodeLoading(false);
+  };
+
   const inputClass =
     "w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent min-h-[44px]";
 
@@ -180,6 +200,7 @@ export default function AddressPage() {
                   onChange={(e) => setForm({ ...form, name: e.target.value })}
                   required
                   placeholder="Full name"
+                  autoComplete="name"
                   className={inputClass}
                 />
               </div>
@@ -192,6 +213,7 @@ export default function AddressPage() {
                   required
                   placeholder="10-digit phone"
                   maxLength={10}
+                  autoComplete="tel-national"
                   className={inputClass}
                 />
               </div>
@@ -205,6 +227,7 @@ export default function AddressPage() {
                 required
                 placeholder="House no., street, area"
                 rows={2}
+                autoComplete="street-address"
                 className={`${inputClass} resize-none`}
               />
             </div>
@@ -217,7 +240,8 @@ export default function AddressPage() {
                   value={form.city}
                   onChange={(e) => setForm({ ...form, city: e.target.value })}
                   required
-                  placeholder="City"
+                  placeholder={pincodeLoading ? "Fetching..." : "City"}
+                  autoComplete="address-level2"
                   className={inputClass}
                 />
               </div>
@@ -228,7 +252,8 @@ export default function AddressPage() {
                   value={form.state}
                   onChange={(e) => setForm({ ...form, state: e.target.value })}
                   required
-                  placeholder="State"
+                  placeholder={pincodeLoading ? "Fetching..." : "State"}
+                  autoComplete="address-level1"
                   className={inputClass}
                 />
               </div>
@@ -237,10 +262,15 @@ export default function AddressPage() {
                 <input
                   type="text"
                   value={form.zip}
-                  onChange={(e) => setForm({ ...form, zip: e.target.value.replace(/\D/g, "").slice(0, 6) })}
+                  onChange={(e) => {
+                    const val = e.target.value.replace(/\D/g, "").slice(0, 6);
+                    setForm({ ...form, zip: val });
+                    if (val.length === 6) fetchPincode(val);
+                  }}
                   required
                   placeholder="PIN code"
                   maxLength={6}
+                  autoComplete="postal-code"
                   className={inputClass}
                 />
               </div>

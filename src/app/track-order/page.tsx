@@ -1,8 +1,8 @@
 import TrackOrderForm from "./TrackOrderForm";
 
 export const metadata = {
-  title: "Track Order | GT Shop",
-  description: "Track your GT Shop order status in real time.",
+  title: "Track Order | GT SHOP",
+  description: "Track your GT SHOP order status in real time.",
 };
 
 export default function TrackOrderPage() {

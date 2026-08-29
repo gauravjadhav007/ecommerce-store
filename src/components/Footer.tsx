@@ -33,7 +33,7 @@ export default function Footer() {
           {/* Brand */}
           <div className="py-6 md:py-0 border-b border-gray-800 md:border-0 mb-6 md:mb-0">
             <Link href="/" className="inline-block">
-              <img src="/logo-white.svg" alt="GT Shop" className="h-10 w-auto" />
+              <img src="/logo-white.svg" alt="GT SHOP" className="h-10 w-auto" />
             </Link>
             <p className="text-gray-400 text-sm leading-relaxed mt-3">
               Quality products at honest prices. Free delivery on orders above ₹499.
@@ -92,7 +92,7 @@ export default function Footer() {
         {/* Copyright & Social */}
         <div className="border-t border-gray-800 mt-6 pt-6 flex flex-col md:flex-row items-center justify-between gap-4">
           <p className="text-gray-500 text-xs text-center md:text-left">
-            © 2026 GT Shop. All rights reserved.
+            © 2026 GT SHOP. All rights reserved.
           </p>
           <div className="flex items-center gap-4">
             <div className="flex gap-3">

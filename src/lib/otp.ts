@@ -1,29 +1,30 @@
 import prisma from "./prisma";
 
 const MSG91_AUTH_KEY = process.env.MSG91_AUTH_KEY;
-const MSG91_TEMPLATE_ID = process.env.MSG91_TEMPLATE_ID;
+const MSG91_FLOW_ID_SIGNUP = process.env.MSG91_FLOW_ID_SIGNUP;
+const MSG91_FLOW_ID_LOGIN = process.env.MSG91_FLOW_ID_LOGIN;
 
-const MSG91_OTP_URL = "https://control.msg91.com/api/v5/otp";
+const MSG91_FLOW_URL = "https://control.msg91.com/api/v5/flow";
 
-async function sendSms(phone: string, otp: string): Promise<boolean> {
+async function sendSms(phone: string, otp: string, purpose: "login" | "signup"): Promise<boolean> {
   if (!MSG91_AUTH_KEY) {
     console.error(`[OTP] MSG91_AUTH_KEY not configured! Cannot send SMS to ${phone}`);
     return false;
   }
 
+  const flowId = purpose === "login" ? MSG91_FLOW_ID_LOGIN : MSG91_FLOW_ID_SIGNUP;
+
   try {
-    const res = await fetch(MSG91_OTP_URL, {
+    const res = await fetch(MSG91_FLOW_URL, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
+        authkey: MSG91_AUTH_KEY ?? "",
       },
       body: JSON.stringify({
-        mobile: `91${phone}`,
-        authkey: MSG91_AUTH_KEY,
-        otp: otp,
-        otp_expiry: 5,
-        otp_length: 6,
-        ...(MSG91_TEMPLATE_ID ? { template_id: MSG91_TEMPLATE_ID } : {}),
+        flow_id: flowId,
+        sender: "GTSHOP",
+        recipients: [{ mobiles: [`91${phone}`], var: otp }],
       }),
     });
 
@@ -46,20 +47,23 @@ function generateRandomOtp(): string {
   return Math.floor(100000 + Math.random() * 900000).toString();
 }
 
-export async function generateOtp(phone: string): Promise<string> {
+export async function createOtp(identifier: string): Promise<string> {
   const code = generateRandomOtp();
-
-  await prisma.otp.deleteMany({ where: { phone } });
-
+  await prisma.otp.deleteMany({ where: { phone: identifier } });
   await prisma.otp.create({
     data: {
-      phone,
+      phone: identifier,
       code,
-      expires: new Date(Date.now() + 5 * 60 * 1000),
+      expires: new Date(Date.now() + 10 * 60 * 1000),
     },
   });
+  return code;
+}
 
-  const sent = await sendSms(phone, code);
+export async function generateOtp(phone: string, purpose: "login" | "signup" = "login"): Promise<string> {
+  const code = await createOtp(phone);
+
+  const sent = await sendSms(phone, code, purpose);
 
   if (!sent) {
     throw new Error("Failed to send OTP via MSG91");

@@ -3,7 +3,7 @@ import { Check, ArrowLeft } from "lucide-react";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Social Media Starter Kit | GT Shop",
+  title: "Social Media Starter Kit | GT SHOP",
   description: "20 Instagram templates, 10 story templates, business spreadsheets, captions and content calendar. Everything you need for your small business social media.",
 };
 

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Plus, Pencil, Trash2, X, Search, Eye, EyeOff, ImagePlus, GripVertical } from "lucide-react";
+import { Plus, Pencil, Trash2, X, Search, Eye, EyeOff, ImagePlus } from "lucide-react";
 import { parseImages } from "@/lib/utils";
 
 interface Category { id: string; name: string; }
@@ -146,14 +146,14 @@ export default function AdminProductsPage() {
     <div>
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-bold">Products</h1>
+          <h1 className="text-xl sm:text-2xl font-bold">Products</h1>
           <p className="text-sm text-gray-500 mt-1">{filtered.length} product{filtered.length !== 1 ? "s" : ""}</p>
         </div>
         <button
           onClick={() => { resetForm(); setEditingProduct(null); setShowModal(true); }}
-          className="flex items-center gap-2 bg-gray-900 text-white px-4 py-2.5 rounded-lg hover:bg-gray-700 text-sm"
+          className="flex items-center gap-2 bg-gray-900 text-white px-3 sm:px-4 py-2.5 rounded-lg hover:bg-gray-700 text-sm min-h-[44px]"
         >
-          <Plus size={16} /> Add Product
+          <Plus size={16} /> <span className="hidden sm:inline">Add Product</span><span className="sm:hidden">Add</span>
         </button>
       </div>
 
@@ -161,7 +161,7 @@ export default function AdminProductsPage() {
       <div className="relative mb-6">
         <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
         <input
-          type="text" placeholder="Search products by name or SKU..." value={search}
+          type="text" placeholder="Search products..." value={search}
           onChange={(e) => setSearch(e.target.value)}
           className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 bg-white"
         />
@@ -172,17 +172,17 @@ export default function AdminProductsPage() {
         )}
       </div>
 
-      {/* Products Table */}
-      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+      {/* Desktop Table */}
+      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden hidden md:block">
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
               <tr className="text-left text-xs text-gray-500 border-b border-gray-100">
                 <th className="px-6 py-3">Product</th>
-                <th className="px-6 py-3 hidden md:table-cell">Category</th>
+                <th className="px-6 py-3">Category</th>
                 <th className="px-6 py-3">Price</th>
-                <th className="px-6 py-3 hidden md:table-cell">Stock</th>
-                <th className="px-6 py-3 hidden sm:table-cell">Status</th>
+                <th className="px-6 py-3">Stock</th>
+                <th className="px-6 py-3">Status</th>
                 <th className="px-6 py-3">Actions</th>
               </tr>
             </thead>
@@ -201,21 +201,21 @@ export default function AdminProductsPage() {
                         </div>
                         <div>
                           <div className="text-sm font-medium">{product.name}</div>
-                          <div className="text-xs text-gray-500">{images.length} photo{images.length !== 1 ? "s" : ""} · {product.sku || "No SKU"}</div>
+                          <div className="text-xs text-gray-500">{product.sku || "No SKU"}</div>
                         </div>
                       </div>
                     </td>
-                    <td className="px-6 py-4 text-sm text-gray-500 hidden md:table-cell">{product.category?.name || "-"}</td>
+                    <td className="px-6 py-4 text-sm text-gray-500">{product.category?.name || "-"}</td>
                     <td className="px-6 py-4">
                       <div className="text-sm font-medium">₹{(product.price / 100).toLocaleString("en-IN")}</div>
                       {product.compareAt && <div className="text-xs text-gray-400 line-through">₹{(product.compareAt / 100).toLocaleString("en-IN")}</div>}
                     </td>
-                    <td className="px-6 py-4 hidden md:table-cell">
+                    <td className="px-6 py-4">
                       <span className={`text-sm font-medium ${product.stock > 10 ? "text-green-600" : product.stock > 0 ? "text-orange-600" : "text-red-600"}`}>
                         {product.stock}
                       </span>
                     </td>
-                    <td className="px-6 py-4 hidden sm:table-cell">
+                    <td className="px-6 py-4">
                       <button onClick={() => toggleActive(product)}
                         className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium cursor-pointer transition-colors ${
                           product.isActive ? "bg-green-100 text-green-700 hover:bg-green-200" : "bg-gray-100 text-gray-500 hover:bg-gray-200"
@@ -242,15 +242,64 @@ export default function AdminProductsPage() {
         </div>
       </div>
 
+      {/* Mobile Cards */}
+      <div className="md:hidden space-y-3">
+        {filtered.length === 0 && (
+          <div className="bg-white rounded-xl border border-gray-200 p-8 text-center text-gray-400 text-sm">No products found</div>
+        )}
+        {filtered.map((product) => {
+          const images = parseImages(product.images);
+          return (
+            <div key={product.id} className="bg-white rounded-xl border border-gray-200 p-4">
+              <div className="flex items-start gap-3">
+                <div className="w-14 h-14 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0">
+                  {images[0] ? <img src={images[0]} alt="" className="w-full h-full object-cover" /> : null}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="text-sm font-medium truncate">{product.name}</div>
+                  <div className="text-xs text-gray-500">{product.category?.name || "No category"}</div>
+                  <div className="flex items-center gap-2 mt-1">
+                    <span className="text-sm font-semibold">₹{(product.price / 100).toLocaleString("en-IN")}</span>
+                    {product.compareAt && <span className="text-xs text-gray-400 line-through">₹{(product.compareAt / 100).toLocaleString("en-IN")}</span>}
+                  </div>
+                </div>
+              </div>
+              <div className="flex items-center justify-between mt-3 pt-3 border-t border-gray-100">
+                <div className="flex items-center gap-2">
+                  <button onClick={() => toggleActive(product)}
+                    className={`flex items-center gap-1 px-2 py-1 rounded-full text-[11px] font-medium ${
+                      product.isActive ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-500"
+                    }`}>
+                    {product.isActive ? <Eye size={10} /> : <EyeOff size={10} />}
+                    {product.isActive ? "Active" : "Draft"}
+                  </button>
+                  <span className={`text-xs font-medium ${product.stock > 10 ? "text-green-600" : product.stock > 0 ? "text-orange-600" : "text-red-600"}`}>
+                    {product.stock === 0 ? "Out of stock" : `${product.stock} in stock`}
+                  </span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <button onClick={() => handleEdit(product)} className="p-2 hover:bg-gray-100 rounded-lg">
+                    <Pencil size={14} />
+                  </button>
+                  <button onClick={() => handleDelete(product.id)} className="p-2 hover:bg-red-50 text-red-500 rounded-lg">
+                    <Trash2 size={14} />
+                  </button>
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
       {/* Product Form Modal */}
       {showModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-2 sm:p-4">
           <div className="bg-white rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-            <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between z-10">
+            <div className="sticky top-0 bg-white border-b border-gray-200 px-4 sm:px-6 py-4 flex items-center justify-between z-10">
               <h2 className="text-lg font-bold">{editingProduct ? "Edit Product" : "Add Product"}</h2>
               <button onClick={() => setShowModal(false)} className="p-2 hover:bg-gray-100 rounded-lg"><X size={20} /></button>
             </div>
-            <form onSubmit={handleSubmit} className="p-6 space-y-4">
+            <form onSubmit={handleSubmit} className="p-4 sm:p-6 space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Name *</label>
                 <input type="text" required value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })}

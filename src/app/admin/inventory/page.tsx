@@ -123,14 +123,14 @@ export default function InventoryPage() {
         )}
       </div>
 
-      {/* Inventory Table */}
-      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+      {/* Desktop Table */}
+      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden hidden md:block">
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
               <tr className="text-left text-xs text-gray-500 border-b border-gray-100">
                 <th className="px-6 py-3">Product</th>
-                <th className="px-6 py-3 hidden md:table-cell">SKU</th>
+                <th className="px-6 py-3">SKU</th>
                 <th className="px-6 py-3">Price</th>
                 <th className="px-6 py-3">Stock</th>
                 <th className="px-6 py-3">Actions</th>
@@ -152,7 +152,7 @@ export default function InventoryPage() {
                     <td className="px-6 py-4">
                       <div className="text-sm font-medium">{product.name}</div>
                     </td>
-                    <td className="px-6 py-4 text-sm text-gray-500 hidden md:table-cell">{product.sku || "—"}</td>
+                    <td className="px-6 py-4 text-sm text-gray-500">{product.sku || "—"}</td>
                     <td className="px-6 py-4 text-sm">₹{(product.price / 100).toLocaleString("en-IN")}</td>
                     <td className="px-6 py-4">
                       {editingId === product.id ? (
@@ -208,6 +208,67 @@ export default function InventoryPage() {
             </tbody>
           </table>
         </div>
+      </div>
+
+      {/* Mobile Cards */}
+      <div className="md:hidden space-y-3">
+        {filtered.length === 0 && (
+          <div className="bg-white rounded-xl border border-gray-200 p-8 text-center text-gray-400 text-sm">No products found</div>
+        )}
+        {filtered.map((product) => {
+          const stockColor = product.stock === 0 ? "text-red-600" : product.stock <= 5 ? "text-orange-600" : "text-green-600";
+          const bgColor = product.stock === 0 ? "bg-red-50" : product.stock <= 5 ? "bg-orange-50" : "bg-green-50";
+          return (
+            <div key={product.id} className={`bg-white rounded-xl border border-gray-200 p-4 ${product.stock === 0 ? "border-red-200" : ""}`}>
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <div className="text-sm font-medium truncate">{product.name}</div>
+                  {product.sku && <div className="text-xs text-gray-500 mt-0.5">SKU: {product.sku}</div>}
+                  <div className="text-xs text-gray-400 mt-0.5">₹{(product.price / 100).toLocaleString("en-IN")}</div>
+                </div>
+              </div>
+              <div className="mt-3 pt-3 border-t border-gray-100 flex items-center justify-between">
+                {editingId === product.id ? (
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="number"
+                      value={editValue}
+                      onChange={(e) => setEditValue(parseInt(e.target.value) || 0)}
+                      className="w-20 px-2 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-gray-900"
+                      autoFocus
+                    />
+                    <button onClick={() => updateStock(product.id, editValue)}
+                      className="p-1.5 bg-green-100 text-green-700 rounded hover:bg-green-200">
+                      <Check size={14} />
+                    </button>
+                    <button onClick={() => setEditingId(null)}
+                      className="p-1.5 bg-gray-100 text-gray-500 rounded hover:bg-gray-200">
+                      <X size={14} />
+                    </button>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-2">
+                    <button onClick={() => quickAdjust(product.id, -1)}
+                      className="p-2 hover:bg-gray-100 rounded-lg text-gray-400"
+                      disabled={product.stock === 0}>
+                      <Minus size={16} />
+                    </button>
+                    <button
+                      onClick={() => { setEditingId(product.id); setEditValue(product.stock); }}
+                      className={`px-4 py-1.5 rounded-lg text-sm font-semibold cursor-pointer transition-colors ${bgColor} ${stockColor}`}
+                    >
+                      {product.stock === 0 ? "Out of stock" : product.stock}
+                    </button>
+                    <button onClick={() => quickAdjust(product.id, 1)}
+                      className="p-2 hover:bg-gray-100 rounded-lg text-gray-400">
+                      <Plus size={16} />
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+          );
+        })}
       </div>
     </div>
   );

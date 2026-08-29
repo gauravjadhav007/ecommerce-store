@@ -17,13 +17,13 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: {
-    default: "GT Shop - Quality Products at Honest Prices",
-    template: "%s | GT Shop",
+    default: "GT SHOP - Quality Products at Honest Prices",
+    template: "%s | GT SHOP",
   },
-  description: "Shop quality clothing, electronics, accessories, footwear and home products at GT Shop. Great prices, secure checkout, free delivery above ₹499 and easy 7-day returns.",
-  keywords: ["online shopping", "GT Shop", "buy online", "home products", "kitchen", "lifestyle", "clothing", "electronics"],
-  authors: [{ name: "GT Shop" }],
-  creator: "GT Shop",
+  description: "Shop quality clothing, electronics, accessories, footwear and home products at GT SHOP. Great prices, secure checkout, free delivery above ₹499 and easy 7-day returns.",
+  keywords: ["online shopping", "GT SHOP", "buy online", "home products", "kitchen", "lifestyle", "clothing", "electronics"],
+  authors: [{ name: "GT SHOP" }],
+  creator: "GT SHOP",
   metadataBase: new URL("https://gtshoppingonline.in"),
   alternates: {
     canonical: "https://gtshoppingonline.in",
@@ -32,21 +32,21 @@ export const metadata: Metadata = {
     type: "website",
     locale: "en_IN",
     url: "https://gtshoppingonline.in",
-    siteName: "GT Shop",
-    title: "GT Shop - Quality Products at Honest Prices",
+    siteName: "GT SHOP",
+    title: "GT SHOP - Quality Products at Honest Prices",
     description: "Quality products at honest prices. Free delivery on orders above ₹499.",
     images: [
       {
         url: "/logo.png",
         width: 1200,
         height: 630,
-        alt: "GT Shop",
+        alt: "GT SHOP",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "GT Shop - Quality Products at Honest Prices",
+    title: "GT SHOP - Quality Products at Honest Prices",
     description: "Quality products at honest prices. Free delivery on orders above ₹499.",
     images: ["/logo.png"],
   },
@@ -91,8 +91,8 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
             __html: JSON.stringify({
               "@context": "https://schema.org",
               "@type": "WebSite",
-              "name": "GT Shop",
-              "alternateName": ["GT SHOP", "GT Shopping Online", "GT Dhop Online"],
+              "name": "GT SHOP",
+              "alternateName": ["GT SHOP", "GT SHOPping Online", "GT Dhop Online"],
               "url": "https://gtshoppingonline.in",
               "potentialAction": {
                 "@type": "SearchAction",
@@ -112,7 +112,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
               "@context": "https://schema.org",
               "@type": "Organization",
               "@id": "https://gtshoppingonline.in/#organization",
-              "name": "GT Shop",
+              "name": "GT SHOP",
               "url": "https://gtshoppingonline.in",
               "logo": {
                 "@type": "ImageObject",

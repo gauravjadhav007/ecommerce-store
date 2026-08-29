@@ -1,6 +1,6 @@
 export const metadata = {
-  title: "Return Policy | GT Shop",
-  description: "Learn about GT Shop return and exchange policies.",
+  title: "Return Policy | GT SHOP",
+  description: "Learn about GT SHOP return and exchange policies.",
 };
 
 export default function ReturnPolicyPage() {

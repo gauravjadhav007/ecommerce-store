@@ -1,6 +1,6 @@
 export const metadata = {
-  title: "Terms & Conditions | GT Shop",
-  description: "Read the terms and conditions for using GT Shop.",
+  title: "Terms & Conditions | GT SHOP",
+  description: "Read the terms and conditions for using GT SHOP.",
 };
 
 export default function TermsPage() {
@@ -14,7 +14,7 @@ export default function TermsPage() {
           <section>
             <h2 className="text-lg font-bold text-gray-900 mb-3">Acceptance of Terms</h2>
             <p className="text-gray-600 leading-relaxed">
-              By accessing or using GT Shop, you agree to be bound by these Terms &amp; Conditions. If you do not agree, please do not use our website.
+              By accessing or using GT SHOP, you agree to be bound by these Terms &amp; Conditions. If you do not agree, please do not use our website.
             </p>
           </section>
 
@@ -52,7 +52,7 @@ export default function TermsPage() {
           <section>
             <h2 className="text-lg font-bold text-gray-900 mb-3">Limitation of Liability</h2>
             <p className="text-gray-600 leading-relaxed">
-              GT Shop shall not be liable for any indirect, incidental, or consequential damages arising from the use of our website or products. Our total liability shall not exceed the amount paid for the product in question.
+              GT SHOP shall not be liable for any indirect, incidental, or consequential damages arising from the use of our website or products. Our total liability shall not exceed the amount paid for the product in question.
             </p>
           </section>
 

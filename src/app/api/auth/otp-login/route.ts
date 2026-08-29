@@ -3,13 +3,22 @@ import prisma from "@/lib/prisma";
 
 export async function POST(req: NextRequest) {
   try {
-    const { phone } = await req.json();
+    const { phone, email } = await req.json();
+    const identifier = email || phone;
 
-    if (!phone || !/^[6-9]\d{9}$/.test(phone)) {
-      return NextResponse.json({ error: "Valid phone number required" }, { status: 400 });
+    if (!identifier) {
+      return NextResponse.json({ error: "Phone or email required" }, { status: 400 });
     }
 
-    const user = await prisma.user.findUnique({ where: { phone } });
+    let user;
+    if (email) {
+      user = await prisma.user.findUnique({ where: { email } });
+    } else {
+      if (!/^[6-9]\d{9}$/.test(phone)) {
+        return NextResponse.json({ error: "Valid phone number required" }, { status: 400 });
+      }
+      user = await prisma.user.findUnique({ where: { phone } });
+    }
 
     if (!user) {
       return NextResponse.json({ error: "User not found. Please register first." }, { status: 404 });

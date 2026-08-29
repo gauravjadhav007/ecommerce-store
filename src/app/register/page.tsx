@@ -3,37 +3,38 @@
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState, Suspense } from "react";
-import { Phone, KeyRound, ArrowLeft, User } from "lucide-react";
+import { Mail, KeyRound, ArrowLeft, User } from "lucide-react";
 
 function RegisterForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const callbackUrl = searchParams.get("callbackUrl") || "/";
+  const prefilledEmail = searchParams.get("email") || "";
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const [step, setStep] = useState<"phone" | "otp" | "details">("phone");
-  const [phone, setPhone] = useState("");
+  const [step, setStep] = useState<"email" | "otp" | "details">(prefilledEmail ? "otp" : "email");
+  const [email, setEmail] = useState(prefilledEmail);
   const [otp, setOtp] = useState("");
-  const [otpCode, setOtpCode] = useState("");
   const [name, setName] = useState("");
+  const [phone, setPhone] = useState("");
 
   const handleSendOtp = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError("");
 
-    if (!/^[6-9]\d{9}$/.test(phone)) {
-      setError("Enter a valid 10-digit mobile number");
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      setError("Enter a valid email address");
       setLoading(false);
       return;
     }
 
     try {
-      const res = await fetch("/api/otp/send", {
+      const res = await fetch("/api/otp/email", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ phone }),
+        body: JSON.stringify({ email, purpose: "signup" }),
       });
       const data = await res.json();
 
@@ -43,7 +44,6 @@ function RegisterForm() {
         return;
       }
 
-      setOtpCode(data.otp);
       setStep("otp");
     } catch {
       setError("Something went wrong");
@@ -67,7 +67,7 @@ function RegisterForm() {
       const res = await fetch("/api/otp/verify", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ phone, code: otp }),
+        body: JSON.stringify({ phone: email, code: otp }),
       });
       const data = await res.json();
 
@@ -96,11 +96,17 @@ function RegisterForm() {
       return;
     }
 
+    if (!/^[6-9]\d{9}$/.test(phone)) {
+      setError("Enter a valid 10-digit mobile number");
+      setLoading(false);
+      return;
+    }
+
     try {
       const res = await fetch("/api/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ phone, name: name.trim() }),
+        body: JSON.stringify({ phone, name: name.trim(), email }),
       });
       const data = await res.json();
 
@@ -113,7 +119,7 @@ function RegisterForm() {
       const result = await fetch("/api/auth/otp-login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ phone }),
+        body: JSON.stringify({ email }),
       });
       const loginData = await result.json();
 
@@ -133,13 +139,13 @@ function RegisterForm() {
   return (
     <div className="w-full max-w-md mx-auto">
       <h1 className="text-xl sm:text-2xl font-bold text-center mb-2">
-        {step === "phone" && "Create Account"}
+        {step === "email" && "Create Account"}
         {step === "otp" && "Verify OTP"}
         {step === "details" && "Your Details"}
       </h1>
       <p className="text-center text-gray-500 text-xs sm:text-sm mb-6 sm:mb-8">
-        {step === "phone" && "Join GT Shop today"}
-        {step === "otp" && `OTP sent to +91 ${phone}`}
+        {step === "email" && "Join GT SHOP today"}
+        {step === "otp" && `OTP sent to ${email}`}
         {step === "details" && "Almost done! Just a few more details"}
       </p>
 
@@ -149,33 +155,28 @@ function RegisterForm() {
         </div>
       )}
 
-      {step === "phone" && (
+      {step === "email" && (
         <form onSubmit={handleSendOtp} className="space-y-3 sm:space-y-4">
           <div>
             <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1">
-              Mobile Number
+              Email Address
             </label>
-            <div className="flex">
-              <span className="flex items-center px-3 bg-gray-100 border border-r-0 border-gray-300 rounded-l-lg text-sm text-gray-600">
-                +91
-              </span>
-              <input
-                type="tel"
-                value={phone}
-                onChange={(e) => setPhone(e.target.value.replace(/\D/g, "").slice(0, 10))}
-                required
-                placeholder="9876543210"
-                maxLength={10}
-                className="flex-1 px-3 py-2.5 border border-gray-300 rounded-r-lg focus:outline-none focus:ring-2 focus:ring-blue-600 min-h-[44px] text-sm sm:text-base"
-              />
-            </div>
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+              placeholder="you@example.com"
+              autoComplete="email"
+              className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600 min-h-[44px] text-sm sm:text-base"
+            />
           </div>
           <button
             type="submit"
-            disabled={loading || phone.length !== 10}
+            disabled={loading || !email}
             className="w-full bg-blue-600 text-white py-2.5 sm:py-3 rounded-lg hover:bg-blue-700 disabled:opacity-50 min-h-[44px] text-sm sm:text-base font-medium flex items-center justify-center gap-2"
           >
-            <Phone className="w-4 h-4" />
+            <Mail className="w-4 h-4" />
             {loading ? "Sending OTP..." : "Send OTP"}
           </button>
         </form>
@@ -183,12 +184,12 @@ function RegisterForm() {
 
       {step === "otp" && (
         <div className="space-y-4">
-          <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 text-center">
-            <p className="text-xs text-amber-600 font-medium">
-              Development Mode — Use OTP: <span className="font-mono font-bold text-amber-800 text-sm">123456</span>
-            </p>
-          </div>
-
+          {prefilledEmail && (
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 text-center">
+              <p className="text-sm text-blue-700 font-medium">{email}</p>
+              <p className="text-xs text-blue-500 mt-1">Enter the OTP sent to this email</p>
+            </div>
+          )}
           <form onSubmit={handleVerifyOtp} className="space-y-3 sm:space-y-4">
             <div>
               <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1">
@@ -214,14 +215,16 @@ function RegisterForm() {
               {loading ? "Verifying..." : "Verify OTP"}
             </button>
 
-            <button
-              type="button"
-              onClick={() => { setStep("phone"); setOtp(""); setError(""); }}
-              className="w-full text-gray-500 py-2 text-sm font-medium flex items-center justify-center gap-1 hover:text-gray-700"
-            >
-              <ArrowLeft className="w-4 h-4" />
-              Change mobile number
-            </button>
+            {!prefilledEmail && (
+              <button
+                type="button"
+                onClick={() => { setStep("email"); setOtp(""); setError(""); }}
+                className="w-full text-gray-500 py-2 text-sm font-medium flex items-center justify-center gap-1 hover:text-gray-700"
+              >
+                <ArrowLeft className="w-4 h-4" />
+                Change email
+              </button>
+            )}
 
             <button
               type="button"
@@ -238,13 +241,13 @@ function RegisterForm() {
       {step === "details" && (
         <form onSubmit={handleCreateAccount} className="space-y-3 sm:space-y-4">
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 text-center">
-            <p className="text-sm text-blue-700 font-medium">+91 {phone}</p>
+            <p className="text-sm text-blue-700 font-medium">{email}</p>
             <p className="text-xs text-blue-500 mt-1">Verified</p>
           </div>
 
           <div>
             <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1">
-              Your Name
+              Your Name *
             </label>
             <input
               type="text"
@@ -252,8 +255,30 @@ function RegisterForm() {
               onChange={(e) => setName(e.target.value)}
               required
               placeholder="Enter your name"
+              autoComplete="name"
               className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600 min-h-[44px] text-sm sm:text-base"
             />
+          </div>
+
+          <div>
+            <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1">
+              Mobile Number *
+            </label>
+            <div className="flex">
+              <span className="flex items-center px-3 bg-gray-100 border border-r-0 border-gray-300 rounded-l-lg text-sm text-gray-600">
+                +91
+              </span>
+              <input
+                type="tel"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value.replace(/\D/g, "").slice(0, 10))}
+                required
+                placeholder="9876543210"
+                maxLength={10}
+                autoComplete="tel-national"
+                className="flex-1 px-3 py-2.5 border border-gray-300 rounded-r-lg focus:outline-none focus:ring-2 focus:ring-blue-600 min-h-[44px] text-sm sm:text-base"
+              />
+            </div>
           </div>
 
           <button
