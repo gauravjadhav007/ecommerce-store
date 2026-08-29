@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import { Search, X, Calendar } from "lucide-react";
+import { Search, X, Calendar, Trash2, Save } from "lucide-react";
 
 interface OrderItem {
   name: string;
@@ -42,6 +42,8 @@ export default function AdminOrdersPage() {
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
+  const [editForm, setEditForm] = useState({ shippingName: "", shippingEmail: "", shippingPhone: "", shippingAddr: "" });
+  const [saving, setSaving] = useState(false);
 
   const fetchOrders = useCallback(async () => {
     setLoading(true);
@@ -57,6 +59,24 @@ export default function AdminOrdersPage() {
   }, [dateFrom, dateTo, statusFilter]);
 
   useEffect(() => { fetchOrders(); }, [fetchOrders]);
+
+  useEffect(() => {
+    if (selectedOrder) {
+      let addr = "";
+      if (selectedOrder.shippingAddr) {
+        try {
+          const parsed = JSON.parse(selectedOrder.shippingAddr);
+          addr = [parsed.address, `${parsed.city}, ${parsed.state} ${parsed.zip}`].filter(Boolean).join(", ");
+        } catch { addr = selectedOrder.shippingAddr; }
+      }
+      setEditForm({
+        shippingName: selectedOrder.shippingName || "",
+        shippingEmail: selectedOrder.shippingEmail || "",
+        shippingPhone: selectedOrder.shippingPhone || "",
+        shippingAddr: addr,
+      });
+    }
+  }, [selectedOrder]);
 
   const filtered = orders.filter((o) => {
     if (search === "") return true;
@@ -78,6 +98,55 @@ export default function AdminOrdersPage() {
     fetchOrders();
     if (selectedOrder?.id === id) {
       setSelectedOrder((prev) => (prev ? { ...prev, status } : null));
+    }
+  };
+
+  const saveOrder = async () => {
+    if (!selectedOrder) return;
+    setSaving(true);
+    let addrJson = "";
+    try {
+      const parts = editForm.shippingAddr.split(",").map(s => s.trim());
+      const stateZip = parts[parts.length - 1]?.split(" ") || [];
+      addrJson = JSON.stringify({
+        address: parts[0] || "",
+        city: parts[1] || "",
+        state: stateZip.slice(0, -1).join(" ") || "",
+        zip: stateZip[stateZip.length - 1] || "",
+        country: "India",
+      });
+    } catch { addrJson = editForm.shippingAddr; }
+
+    await fetch("/api/admin/orders", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        id: selectedOrder.id,
+        shippingName: editForm.shippingName,
+        shippingEmail: editForm.shippingEmail,
+        shippingPhone: editForm.shippingPhone,
+        shippingAddr: addrJson,
+      }),
+    });
+    await fetchOrders();
+    setSelectedOrder((prev) => prev ? {
+      ...prev,
+      shippingName: editForm.shippingName,
+      shippingEmail: editForm.shippingEmail,
+      shippingPhone: editForm.shippingPhone,
+    } : null);
+    setSaving(false);
+  };
+
+  const deleteOrder = async (id: string, orderNumber: string) => {
+    if (!confirm(`Delete order ${orderNumber}? This cannot be undone.`)) return;
+    const res = await fetch(`/api/admin/orders?id=${id}`, { method: "DELETE" });
+    if (res.ok) {
+      fetchOrders();
+      if (selectedOrder?.id === id) setSelectedOrder(null);
+    } else {
+      const data = await res.json();
+      alert(data.error || "Failed to delete order");
     }
   };
 
@@ -120,21 +189,9 @@ export default function AdminOrdersPage() {
       <div className="flex flex-col sm:flex-row gap-3 mb-6">
         <div className="flex items-center gap-2 bg-white border border-gray-200 rounded-lg px-3 py-2">
           <Calendar size={16} className="text-gray-400 flex-shrink-0" />
-          <input
-            type="date"
-            value={dateFrom}
-            onChange={(e) => setDateFrom(e.target.value)}
-            className="text-sm border-0 focus:outline-none focus:ring-0 w-full sm:w-auto"
-            placeholder="From"
-          />
+          <input type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} className="text-sm border-0 focus:outline-none focus:ring-0 w-full sm:w-auto" />
           <span className="text-gray-400 text-sm">to</span>
-          <input
-            type="date"
-            value={dateTo}
-            onChange={(e) => setDateTo(e.target.value)}
-            className="text-sm border-0 focus:outline-none focus:ring-0 w-full sm:w-auto"
-            placeholder="To"
-          />
+          <input type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)} className="text-sm border-0 focus:outline-none focus:ring-0 w-full sm:w-auto" />
         </div>
         <div className="relative flex-1">
           <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
@@ -152,9 +209,7 @@ export default function AdminOrdersPage() {
           )}
         </div>
         {(dateFrom || dateTo || search) && (
-          <button onClick={clearFilters} className="px-4 py-2.5 text-sm text-gray-500 hover:text-gray-700 whitespace-nowrap">
-            Clear filters
-          </button>
+          <button onClick={clearFilters} className="px-4 py-2.5 text-sm text-gray-500 hover:text-gray-700 whitespace-nowrap">Clear filters</button>
         )}
       </div>
 
@@ -170,11 +225,12 @@ export default function AdminOrdersPage() {
                 <th className="px-6 py-3">Total</th>
                 <th className="px-6 py-3">Status</th>
                 <th className="px-6 py-3">Date</th>
+                <th className="px-6 py-3">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-50">
               {filtered.length === 0 && (
-                <tr><td colSpan={6} className="px-6 py-12 text-center text-gray-400 text-sm">No orders found</td></tr>
+                <tr><td colSpan={7} className="px-6 py-12 text-center text-gray-400 text-sm">No orders found</td></tr>
               )}
               {filtered.map((order) => (
                 <tr key={order.id} className="hover:bg-gray-50 cursor-pointer" onClick={() => setSelectedOrder(order)}>
@@ -198,8 +254,15 @@ export default function AdminOrdersPage() {
                       ))}
                     </select>
                   </td>
-                  <td className="px-6 py-4 text-xs text-gray-500">
-                    {new Date(order.createdAt).toLocaleDateString("en-IN")}
+                  <td className="px-6 py-4 text-xs text-gray-500">{new Date(order.createdAt).toLocaleDateString("en-IN")}</td>
+                  <td className="px-6 py-4" onClick={(e) => e.stopPropagation()}>
+                    <button
+                      onClick={() => deleteOrder(order.id, order.orderNumber)}
+                      className="p-2 text-gray-400 hover:text-red-600 rounded-lg hover:bg-red-50 transition-colors"
+                      title="Delete order"
+                    >
+                      <Trash2 size={14} />
+                    </button>
                   </td>
                 </tr>
               ))}
@@ -214,8 +277,8 @@ export default function AdminOrdersPage() {
           <div className="bg-white rounded-xl border border-gray-200 p-8 text-center text-gray-400 text-sm">No orders found</div>
         )}
         {filtered.map((order) => (
-          <div key={order.id} className="bg-white rounded-xl border border-gray-200 p-4 cursor-pointer" onClick={() => setSelectedOrder(order)}>
-            <div className="flex items-start justify-between gap-3">
+          <div key={order.id} className="bg-white rounded-xl border border-gray-200 p-4">
+            <div className="flex items-start justify-between gap-3 cursor-pointer" onClick={() => setSelectedOrder(order)}>
               <div>
                 <div className="text-sm font-semibold">{order.orderNumber}</div>
                 <div className="text-xs text-gray-500">{order.user.name || order.shippingName || "Guest"}</div>
@@ -226,7 +289,7 @@ export default function AdminOrdersPage() {
                 <div className="text-xs text-gray-500">{order.items.length} item{order.items.length !== 1 ? "s" : ""}</div>
               </div>
             </div>
-            <div className="mt-3 pt-3 border-t border-gray-100" onClick={(e) => e.stopPropagation()}>
+            <div className="mt-3 pt-3 border-t border-gray-100 flex items-center justify-between" onClick={(e) => e.stopPropagation()}>
               <select
                 value={order.status}
                 onChange={(e) => updateStatus(order.id, e.target.value)}
@@ -236,6 +299,12 @@ export default function AdminOrdersPage() {
                   <option key={s} value={s}>{s}</option>
                 ))}
               </select>
+              <button
+                onClick={() => deleteOrder(order.id, order.orderNumber)}
+                className="p-2 text-gray-400 hover:text-red-600 rounded-lg hover:bg-red-50"
+              >
+                <Trash2 size={14} />
+              </button>
             </div>
           </div>
         ))}
@@ -251,9 +320,19 @@ export default function AdminOrdersPage() {
                 <h2 className="text-lg font-bold">{selectedOrder.orderNumber}</h2>
                 <p className="text-xs text-gray-500">{new Date(selectedOrder.createdAt).toLocaleString("en-IN")}</p>
               </div>
-              <button onClick={() => setSelectedOrder(null)} className="p-2 hover:bg-gray-100 rounded-lg"><X size={20} /></button>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => deleteOrder(selectedOrder.id, selectedOrder.orderNumber)}
+                  className="p-2 text-gray-400 hover:text-red-600 rounded-lg hover:bg-red-50"
+                  title="Delete order"
+                >
+                  <Trash2 size={18} />
+                </button>
+                <button onClick={() => setSelectedOrder(null)} className="p-2 hover:bg-gray-100 rounded-lg"><X size={20} /></button>
+              </div>
             </div>
             <div className="p-6 space-y-6">
+              {/* Status */}
               <div>
                 <label className="text-xs font-medium text-gray-500 uppercase tracking-wider">Status</label>
                 <div className="mt-2">
@@ -268,6 +347,42 @@ export default function AdminOrdersPage() {
                   </select>
                 </div>
               </div>
+
+              {/* Edit Shipping Details */}
+              <div>
+                <h3 className="text-sm font-semibold mb-3">Shipping Details</h3>
+                <div className="space-y-3">
+                  <div>
+                    <label className="block text-xs text-gray-500 mb-1">Name</label>
+                    <input type="text" value={editForm.shippingName} onChange={(e) => setEditForm({ ...editForm, shippingName: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-gray-900" />
+                  </div>
+                  <div>
+                    <label className="block text-xs text-gray-500 mb-1">Email</label>
+                    <input type="email" value={editForm.shippingEmail} onChange={(e) => setEditForm({ ...editForm, shippingEmail: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-gray-900" />
+                  </div>
+                  <div>
+                    <label className="block text-xs text-gray-500 mb-1">Phone</label>
+                    <input type="text" value={editForm.shippingPhone} onChange={(e) => setEditForm({ ...editForm, shippingPhone: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-gray-900" />
+                  </div>
+                  <div>
+                    <label className="block text-xs text-gray-500 mb-1">Address</label>
+                    <textarea value={editForm.shippingAddr} onChange={(e) => setEditForm({ ...editForm, shippingAddr: e.target.value })} rows={2}
+                      className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-gray-900" />
+                  </div>
+                  <button
+                    onClick={saveOrder}
+                    disabled={saving}
+                    className="flex items-center gap-2 bg-gray-900 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-800 disabled:opacity-50"
+                  >
+                    <Save size={14} /> {saving ? "Saving..." : "Save Changes"}
+                  </button>
+                </div>
+              </div>
+
+              {/* Items */}
               <div>
                 <h3 className="text-sm font-semibold mb-3">Items ({selectedOrder.items.length})</h3>
                 <div className="space-y-3">
@@ -285,6 +400,8 @@ export default function AdminOrdersPage() {
                   ))}
                 </div>
               </div>
+
+              {/* Customer */}
               <div>
                 <h3 className="text-sm font-semibold mb-3">Customer</h3>
                 <div className="bg-gray-50 rounded-lg p-4 space-y-1">
@@ -293,16 +410,8 @@ export default function AdminOrdersPage() {
                   {selectedOrder.user.phone && <div className="text-sm text-gray-600">{selectedOrder.user.phone}</div>}
                 </div>
               </div>
-              {shipping && (
-                <div>
-                  <h3 className="text-sm font-semibold mb-3">Shipping Address</h3>
-                  <div className="bg-gray-50 rounded-lg p-4 text-sm text-gray-600 space-y-1">
-                    <div>{shipping.address}</div>
-                    <div>{shipping.city}, {shipping.state} {shipping.zip}</div>
-                    <div>{shipping.country || "India"}</div>
-                  </div>
-                </div>
-              )}
+
+              {/* Payment Summary */}
               <div>
                 <h3 className="text-sm font-semibold mb-3">Payment Summary</h3>
                 <div className="bg-gray-50 rounded-lg p-4 space-y-2">

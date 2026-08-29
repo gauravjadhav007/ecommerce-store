@@ -52,15 +52,42 @@ export async function PUT(req: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { id, status } = await req.json();
+    const body = await req.json();
+    const { id, status, shippingName, shippingEmail, shippingPhone, shippingAddr } = body;
 
-    if (!id || !status) {
-      return NextResponse.json({ error: "Order ID and status are required" }, { status: 400 });
+    if (!id) {
+      return NextResponse.json({ error: "Order ID is required" }, { status: 400 });
     }
 
-    const order = await prisma.order.update({ where: { id }, data: { status } });
+    const updateData: Record<string, unknown> = {};
+    if (status) updateData.status = status;
+    if (shippingName !== undefined) updateData.shippingName = shippingName;
+    if (shippingEmail !== undefined) updateData.shippingEmail = shippingEmail;
+    if (shippingPhone !== undefined) updateData.shippingPhone = shippingPhone;
+    if (shippingAddr !== undefined) updateData.shippingAddr = shippingAddr;
+
+    const order = await prisma.order.update({ where: { id }, data: updateData });
     return NextResponse.json(order);
   } catch {
     return NextResponse.json({ error: "Failed to update order" }, { status: 500 });
+  }
+}
+
+export async function DELETE(req: NextRequest) {
+  try {
+    const session = getSessionUser(req);
+    if (!session || session.role !== "ADMIN") {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const { searchParams } = new URL(req.url);
+    const id = searchParams.get("id");
+    if (!id) return NextResponse.json({ error: "Order ID is required" }, { status: 400 });
+
+    await prisma.orderItem.deleteMany({ where: { orderId: id } });
+    await prisma.order.delete({ where: { id } });
+    return NextResponse.json({ success: true });
+  } catch {
+    return NextResponse.json({ error: "Failed to delete order" }, { status: 500 });
   }
 }
