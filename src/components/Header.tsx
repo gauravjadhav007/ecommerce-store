@@ -89,6 +89,8 @@ export default function Header() {
               <div ref={menuRef} className="relative">
                 <button
                   onClick={() => setAccountMenuOpen(!accountMenuOpen)}
+                  onMouseDown={(e) => e.stopPropagation()}
+                  onTouchStart={(e) => e.stopPropagation()}
                   className="p-2 text-gray-600 hover:text-gray-900 active:text-gray-900"
                   aria-label="Account"
                 >
