@@ -62,7 +62,7 @@ export default function OrdersPage() {
   const fetchOrders = async () => {
     const res = await fetch("/api/orders");
     const data = await res.json();
-    setOrders(data);
+    setOrders(Array.isArray(data) ? data : []);
     setLoading(false);
   };
 

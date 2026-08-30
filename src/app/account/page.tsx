@@ -43,12 +43,6 @@ export default function AccountPage() {
   });
 
   useEffect(() => {
-    if (status === "unauthenticated") {
-      router.push("/login");
-    }
-  }, [status, router]);
-
-  useEffect(() => {
     if (session?.user) {
       setProfile({
         firstName: session.user.firstName || "",
@@ -69,8 +63,7 @@ export default function AccountPage() {
     );
   }
 
-  if (!session) {
-    router.push("/login?callbackUrl=/account");
+  if (!session?.user) {
     return null;
   }
 

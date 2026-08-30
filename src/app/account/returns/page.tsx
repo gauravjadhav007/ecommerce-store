@@ -75,17 +75,11 @@ export default function ReturnsPage() {
   const [requestType, setRequestType] = useState<"RETURN" | "EXCHANGE">("RETURN");
 
   useEffect(() => {
-    if (status === "unauthenticated") {
-      router.push("/login");
-    }
-  }, [status, router]);
-
-  useEffect(() => {
     if (session?.user) {
       fetch("/api/orders")
         .then((r) => r.json())
         .then((data) => {
-          setOrders(data);
+          setOrders(Array.isArray(data) ? data : []);
           setLoading(false);
         })
         .catch(() => setLoading(false));
@@ -144,7 +138,7 @@ export default function ReturnsPage() {
     setSubmitting(false);
   };
 
-  if (loading) {
+  if (status === "loading") {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="text-gray-500 text-sm">Loading...</div>

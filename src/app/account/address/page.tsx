@@ -37,12 +37,7 @@ export default function AddressPage() {
   const [form, setForm] = useState(EMPTY_ADDRESS);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
-
-  useEffect(() => {
-    if (status === "unauthenticated") {
-      router.push("/login");
-    }
-  }, [status, router]);
+  const [pincodeLoading, setPincodeLoading] = useState(false);
 
   useEffect(() => {
     if (session?.user) {
@@ -58,6 +53,14 @@ export default function AddressPage() {
       localStorage.setItem(`addresses-${session.user.id}`, JSON.stringify(addrs));
     }
   };
+
+  if (status === "loading") {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-gray-500 text-sm">Loading...</div>
+      </div>
+    );
+  }
 
   const handleSave = (e: React.FormEvent) => {
     e.preventDefault();
@@ -123,8 +126,6 @@ export default function AddressPage() {
     persistAddresses(updated);
   };
 
-  const [pincodeLoading, setPincodeLoading] = useState(false);
-
   const fetchPincode = async (pincode: string) => {
     if (pincode.length !== 6) return;
     setPincodeLoading(true);
@@ -145,14 +146,6 @@ export default function AddressPage() {
 
   const inputClass =
     "w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent min-h-[44px]";
-
-  if (status === "loading") {
-    return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <div className="text-gray-500 text-sm">Loading...</div>
-      </div>
-    );
-  }
 
   return (
     <div className="max-w-3xl mx-auto">
