@@ -1,9 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import bcrypt from "bcryptjs";
-import { SignJWT } from "jose";
-
-const secret = new TextEncoder().encode(process.env.NEXTAUTH_SECRET);
+import { encode } from "next-auth/jwt";
 
 export async function POST(req: NextRequest) {
   try {
@@ -28,23 +26,23 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Not authorized as admin" }, { status: 403 });
     }
 
-    const token = await new SignJWT({
-      sub: user.id,
-      id: user.id,
-      role: user.role,
-      phone: user.phone,
-      firstName: user.firstName,
-      lastName: user.lastName,
-      gender: user.gender,
-      dob: user.dob?.toISOString() || null,
-      name: user.name,
-      email: user.email,
-      picture: user.image,
-    })
-      .setProtectedHeader({ alg: "HS256" })
-      .setIssuedAt()
-      .setExpirationTime("30d")
-      .sign(secret);
+    const token = await encode({
+      token: {
+        sub: user.id,
+        id: user.id,
+        role: user.role,
+        phone: user.phone,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        gender: user.gender,
+        dob: user.dob?.toISOString() || null,
+        name: user.name,
+        email: user.email,
+        picture: user.image,
+      },
+      secret: process.env.NEXTAUTH_SECRET!,
+      maxAge: 30 * 24 * 60 * 60,
+    });
 
     const response = NextResponse.json({ success: true });
 

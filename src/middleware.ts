@@ -1,38 +1,38 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
+import { jwtDecrypt } from "jose";
+import { hkdf } from "@panva/hkdf";
 
 const protectedRoutes = ["/checkout"];
 const adminRoutes = ["/admin"];
 const adminLoginRoutes = ["/admin/login"];
 const authRoutes = ["/login", "/register"];
 
-function base64UrlDecode(str: string): string {
-  let base64 = str.replace(/-/g, "+").replace(/_/g, "/");
-  while (base64.length % 4) base64 += "=";
-  try {
-    if (typeof atob === "function") return atob(base64);
-  } catch {}
-  try {
-    if (typeof Buffer !== "undefined") return Buffer.from(base64, "base64").toString("utf-8");
-  } catch {}
-  const bytes = Uint8Array.from(base64, (c) => c.charCodeAt(0));
-  return new TextDecoder().decode(bytes);
+async function getDerivedEncryptionKey(keyMaterial: string, salt: string) {
+  return await hkdf(
+    "sha256",
+    keyMaterial,
+    salt,
+    `NextAuth.js Generated Encryption Key${salt ? ` (${salt})` : ""}`,
+    32
+  );
 }
 
-function decodeToken(token: string): { role?: string } | null {
+async function decryptToken(token: string): Promise<{ role?: string } | null> {
   try {
-    if (!token.includes(".")) {
-      return JSON.parse(base64UrlDecode(token));
-    }
-    const payload = token.split(".")[1];
-    if (!payload) return null;
-    return JSON.parse(base64UrlDecode(payload));
+    const secret = process.env.NEXTAUTH_SECRET;
+    if (!secret) return null;
+    const encryptionSecret = await getDerivedEncryptionKey(secret, "");
+    const { payload } = await jwtDecrypt(token, encryptionSecret, {
+      clockTolerance: 15,
+    });
+    return payload as { role?: string };
   } catch {
     return null;
   }
 }
 
-export function middleware(request: NextRequest) {
+export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const host = request.headers.get("host") || "";
 
@@ -47,7 +47,7 @@ export function middleware(request: NextRequest) {
   // Allow admin login page without auth
   if (adminLoginRoutes.includes(pathname)) {
     if (token) {
-      const payload = decodeToken(token);
+      const payload = await decryptToken(token);
       if (payload?.role === "ADMIN") {
         return NextResponse.redirect(new URL("/admin", request.url));
       }
@@ -72,7 +72,7 @@ export function middleware(request: NextRequest) {
     if (!token) {
       return NextResponse.redirect(new URL("/admin/login", request.url));
     }
-    const payload = decodeToken(token);
+    const payload = await decryptToken(token);
     if (payload?.role !== "ADMIN") {
       return NextResponse.redirect(new URL("/account", request.url));
     }

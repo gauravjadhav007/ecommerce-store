@@ -1,4 +1,6 @@
 import { NextRequest } from "next/server";
+import { jwtDecrypt } from "jose";
+import { hkdf } from "@panva/hkdf";
 
 export interface SessionUser {
   id: string;
@@ -8,30 +10,31 @@ export interface SessionUser {
   role: string;
 }
 
-function decodeToken(token: string): SessionUser | null {
+async function getDerivedEncryptionKey(keyMaterial: string, salt: string) {
+  return await hkdf(
+    "sha256",
+    keyMaterial,
+    salt,
+    `NextAuth.js Generated Encryption Key${salt ? ` (${salt})` : ""}`,
+    32
+  );
+}
+
+async function decryptToken(token: string): Promise<SessionUser | null> {
   try {
-    if (!token.includes(".")) {
-      const decoded = JSON.parse(Buffer.from(token, "base64url").toString());
-      if (decoded.id && decoded.role) {
-        return {
-          id: decoded.id,
-          name: decoded.name || null,
-          email: decoded.email || null,
-          phone: decoded.phone || null,
-          role: decoded.role,
-        };
-      }
-    }
-    const payload = token.split(".")[1];
-    if (!payload) return null;
-    const decoded = JSON.parse(Buffer.from(payload, "base64url").toString());
-    if (decoded.id && decoded.role) {
+    const secret = process.env.NEXTAUTH_SECRET;
+    if (!secret) return null;
+    const encryptionSecret = await getDerivedEncryptionKey(secret, "");
+    const { payload } = await jwtDecrypt(token, encryptionSecret, {
+      clockTolerance: 15,
+    });
+    if (payload.id && payload.role) {
       return {
-        id: decoded.id,
-        name: decoded.name || null,
-        email: decoded.email || null,
-        phone: decoded.phone || null,
-        role: decoded.role,
+        id: payload.id as string,
+        name: (payload.name as string) || null,
+        email: (payload.email as string) || null,
+        phone: (payload.phone as string) || null,
+        role: payload.role as string,
       };
     }
     return null;
@@ -40,10 +43,10 @@ function decodeToken(token: string): SessionUser | null {
   }
 }
 
-export function getSessionUser(req: NextRequest): SessionUser | null {
+export async function getSessionUser(req: NextRequest): Promise<SessionUser | null> {
   const token =
     req.cookies.get("__Secure-next-auth.session-token")?.value ||
     req.cookies.get("next-auth.session-token")?.value;
   if (!token) return null;
-  return decodeToken(token);
+  return decryptToken(token);
 }
