@@ -8,6 +8,7 @@
 - **Vercel project**: `gauravjadhav561-8665s-projects/ecommerce-store`
 - **DNS**: GoDaddy
 - **Admin credentials**: `gaurav.jadhav561@gmail.com` / `Gaurav@007`
+- **Last commit**: `db81f86` — fix: session persistence across page refreshes
 
 ## User Rules
 - **NEVER deploy without asking first**
@@ -16,7 +17,7 @@
 
 ## Tech Details
 - **Database**: PostgreSQL on Neon (connection string in `DATABASE_URL` env var)
-- **Auth**: NextAuth v4 (JWT strategy) + custom `jose` JWT for OTP/admin login
+- **Auth**: NextAuth v4 (JWT strategy, AES-256-GCM encrypted tokens via `next-auth/jwt` encode/decode)
 - **Email**: Resend API (key in `RESEND_API_KEY` env var), domain `gtshoppingonline.in` verified, sender `noreply@gtshoppingonline.in`
 - **Payments**: Razorpay live (keys in `RAZORPAY_KEY_ID` / `RAZORPAY_KEY_SECRET` env vars)
 - **SMS**: MSG91 — **demo mode**, SMS disabled (no GST/DLT). Phone OTP removed from codebase.
@@ -89,8 +90,8 @@ Admin Pages:
 ```
 Auth:
   auth/[...nextauth]/route.ts       — NextAuth handler (GET/POST)
-  auth/otp-login/route.ts           — OTP login → jose JWT → set cookie
-  auth/admin-login/route.ts         — Admin login → jose JWT → set cookie
+  auth/otp-login/route.ts           — OTP login → next-auth/jwt encode() → encrypted JWT cookie
+  auth/admin-login/route.ts         — Admin login → next-auth/jwt encode() → encrypted JWT cookie
 
 OTP:
   otp/email/route.ts                — Send OTP (email via Resend)
@@ -131,8 +132,8 @@ Other:
 
 ### Lib (src/lib/)
 ```
-auth.ts              — NextAuth config (authOptions, CredentialsProvider, JWT callbacks with jwt.decode via jose)
-session.ts           — getSessionUser(), decodeToken() — reads cookies, decodes JWT with atob/Buffer fallback for Edge Runtime
+auth.ts              — NextAuth config (authOptions, CredentialsProvider, JWT callbacks). No custom jwt.decode — uses NextAuth default (jwtDecrypt)
+session.ts           — getSessionUser() — reads cookies, decrypts via jose.jwtDecrypt with HKDF key derivation (async)
 prisma.ts            — Prisma client singleton
 otp.ts               — createOtp(), generateOtp(), verifyOtp() — 10 min expiry
 email.ts             — sendEmail() via Resend, sendOtpEmail(to, code, purpose), sendOrderConfirmation()
@@ -165,13 +166,13 @@ cart.ts              — Zustand cart store (guest cart, localStorage, no auth r
 ## Auth Flow (CRITICAL)
 
 ### How Auth Works
-1. **Login**: User enters email → POST `/api/otp/email` (sends OTP via Resend) → verify OTP at `/api/otp/verify` → check if email exists → if exists: POST `/api/auth/otp-login` → jose JWT cookie → `window.location.href` redirect (full page reload for session persistence); if new: redirect to `/register?email=...`
+1. **Login**: User enters email → POST `/api/otp/email` (sends OTP via Resend) → verify OTP at `/api/otp/verify` → check if email exists → if exists: POST `/api/auth/otp-login` → NextAuth `encode()` creates AES-256-GCM encrypted JWT cookie → `window.location.href` redirect; if new: redirect to `/register?email=...`
 2. **Register**: User enters email → OTP → verify → enter name + optional phone → POST `/api/register` (creates user) → auto-login via otp-login → `window.location.href` redirect
-3. **Admin Login**: Email + password → POST `/api/auth/admin-login` → validates bcrypt password + ADMIN role → jose JWT cookie
-4. **Middleware**: Reads `next-auth.session-token` or `__Secure-next-auth.session-token`, decodes JWT payload via `atob()` (Edge Runtime compatible), checks role for admin routes
-5. **Session**: `jwt.decode` in NextAuth authOptions uses `jose.jwtVerify` to decode our tokens. Session endpoint returns full user data.
+3. **Admin Login**: Email + password → POST `/api/auth/admin-login` → validates bcrypt password + ADMIN role → NextAuth `encode()` creates encrypted JWT cookie
+4. **Middleware**: Reads session token cookie, decrypts via `jose.jwtDecrypt` with HKDF key derivation (matches NextAuth format), checks role for admin routes
+5. **Session**: NextAuth default `jwt.decode` decrypts the encrypted JWT token. Session endpoint returns full user data.
 
-### JWT Structure (jose SignJWT)
+### JWT Structure (NextAuth encrypted JWT)
 ```js
 {
   sub: user.id,        // Required for NextAuth JWT callback
@@ -183,16 +184,20 @@ cart.ts              — Zustand cart store (guest cart, localStorage, no auth r
   picture: user.image,
 }
 ```
+Token format: AES-256-GCM encrypted via `next-auth/jwt` `encode()`. NOT signed JWT.
 
 ### Cookie Names
 - `next-auth.session-token` (secure: false, for localhost)
 - `__Secure-next-auth.session-token` (secure: true, for production)
 
 ### Session Token Decode (src/lib/session.ts)
-`getSessionUser(req)` reads cookie, supports both base64url and JWT `payload.split(".")[1]` decode. Uses `atob()` for Edge Runtime compatibility (NOT `Buffer.from` which crashes in Edge).
+`getSessionUser(req)` reads cookie, decrypts via `jose.jwtDecrypt` with HKDF key derivation (`@panva/hkdf`). Uses `crypto.subtle` compatible HKDF for Edge Runtime. Returns full SessionUser with id, name, email, phone, role.
 
 ### Session Persistence (IMPORTANT)
 After setting cookies via `/api/auth/otp-login` or `/api/auth/admin-login`, use `window.location.href` (full page reload) instead of `router.push()` + `router.refresh()`. Client-side navigation in Next.js App Router preserves the `SessionProvider` instance, which doesn't re-fetch the session when cookies change externally.
+
+### CRITICAL: Token format
+All auth tokens must use `next-auth/jwt` `encode()` (AES-256-GCM encrypted), NOT `jose.SignJWT` (HS256 signed). NextAuth's default decode uses `jwtDecrypt` which cannot decrypt signed tokens — session will always be empty if formats mismatch.
 
 ## Route Protection (Middleware)
 ```
@@ -207,10 +212,12 @@ Auth routes (/login, /register): redirect to / if already logged in
 - **Header profile icon**: Direct link to `/account` page (no dropdown menu on desktop).
 - **Mobile hamburger menu**: Shows Account, My Orders, Addresses, Returns & Refunds, Wishlist, Sign Out for logged-in users. Shows Sign In / Register for logged-out users.
 - **OTP flow is email-only**: Phone/SMS OTP removed (MSG91 doesn't work without GST/DLT).
-- **Edge Runtime**: Middleware uses `atob()` for JWT decoding (not `Buffer.from` which is unavailable in Edge).
+- **Edge Runtime**: Middleware uses `jose.jwtDecrypt` with `@panva/hkdf` for token decryption (all Edge-compatible).
 
 ## API Test Results
 - 26/26 tests passed (admin CRUD + customer auth + public APIs + security)
+- Playwright automated tests: all 15 customer pages load without redirects
+- Session persistence verified: login → reload → session intact
 - Admin delete user handles FK constraints (orders/reviews prevent deletion)
 - OTP expiry: 10 minutes
 - Email OTP via Resend works reliably
@@ -227,3 +234,4 @@ npm run lint       # ESLint
 - Branch: `main`
 - All code pushed to GitHub
 - Commit before pushing: run `npm run build` to verify
+- Last deploy: `db81f86` — fix: session persistence across page refreshes
