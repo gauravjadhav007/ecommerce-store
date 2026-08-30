@@ -6,18 +6,21 @@ const adminRoutes = ["/admin"];
 const adminLoginRoutes = ["/admin/login"];
 const authRoutes = ["/login", "/register"];
 
+function base64UrlDecode(str: string): string {
+  let base64 = str.replace(/-/g, "+").replace(/_/g, "/");
+  while (base64.length % 4) base64 += "=";
+  if (typeof atob !== "undefined") return atob(base64);
+  return Buffer.from(base64, "base64").toString("utf-8");
+}
+
 function decodeToken(token: string): { role?: string } | null {
   try {
-    // Handle simple base64url tokens (from admin-login)
     if (!token.includes(".")) {
-      const decoded = JSON.parse(Buffer.from(token, "base64url").toString());
-      return decoded;
+      return JSON.parse(base64UrlDecode(token));
     }
-    // Handle JWT format (from next-auth)
     const payload = token.split(".")[1];
     if (!payload) return null;
-    const decoded = JSON.parse(Buffer.from(payload, "base64url").toString());
-    return decoded;
+    return JSON.parse(base64UrlDecode(payload));
   } catch {
     return null;
   }
