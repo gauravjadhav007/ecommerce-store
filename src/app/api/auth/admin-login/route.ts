@@ -26,6 +26,8 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Not authorized as admin" }, { status: 403 });
     }
 
+    const maxAge = 365 * 24 * 60 * 60 * 10;
+
     const token = await encode({
       token: {
         sub: user.id,
@@ -41,7 +43,7 @@ export async function POST(req: NextRequest) {
         picture: user.image,
       },
       secret: process.env.NEXTAUTH_SECRET!,
-      maxAge: 30 * 24 * 60 * 60,
+      maxAge,
     });
 
     const response = NextResponse.json({ success: true });
@@ -51,7 +53,7 @@ export async function POST(req: NextRequest) {
       secure: false,
       sameSite: "lax",
       path: "/",
-      maxAge: 30 * 24 * 60 * 60,
+      maxAge,
     });
 
     response.cookies.set("__Secure-next-auth.session-token", token, {
@@ -59,7 +61,7 @@ export async function POST(req: NextRequest) {
       secure: true,
       sameSite: "lax",
       path: "/",
-      maxAge: 30 * 24 * 60 * 60,
+      maxAge,
     });
 
     return response;

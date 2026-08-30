@@ -73,7 +73,7 @@ export const authOptions: NextAuthOptions = {
       },
     }),
   ],
-  session: { strategy: "jwt" },
+  session: { strategy: "jwt", maxAge: 365 * 24 * 60 * 60 * 10 },
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
@@ -82,18 +82,22 @@ export const authOptions: NextAuthOptions = {
         token.phone = user.phone ?? null;
       }
       if (token.id) {
-        const dbUser = await prisma.user.findUnique({
-          where: { id: token.id },
-          select: { name: true, role: true, phone: true, firstName: true, lastName: true, gender: true, dob: true },
-        });
-        if (dbUser) {
-          token.name = dbUser.name;
-          token.role = dbUser.role;
-          token.phone = dbUser.phone;
-          token.firstName = dbUser.firstName;
-          token.lastName = dbUser.lastName;
-          token.gender = dbUser.gender;
-          token.dob = dbUser.dob?.toISOString() || null;
+        try {
+          const dbUser = await prisma.user.findUnique({
+            where: { id: token.id },
+            select: { name: true, role: true, phone: true, firstName: true, lastName: true, gender: true, dob: true },
+          });
+          if (dbUser) {
+            token.name = dbUser.name;
+            token.role = dbUser.role;
+            token.phone = dbUser.phone;
+            token.firstName = dbUser.firstName;
+            token.lastName = dbUser.lastName;
+            token.gender = dbUser.gender;
+            token.dob = dbUser.dob?.toISOString() || null;
+          }
+        } catch {
+          // DB query failed — keep existing token values
         }
       }
       return token;
