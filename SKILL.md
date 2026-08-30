@@ -8,7 +8,7 @@
 - **Vercel project**: `gauravjadhav561-8665s-projects/ecommerce-store`
 - **DNS**: GoDaddy
 - **Admin credentials**: `gaurav.jadhav561@gmail.com` / `Gaurav@007`
-- **Last commit**: `db81f86` — fix: session persistence across page refreshes
+- **Last commit**: `7d0eb91` — fix: never auto-logout, session persists 10 years
 
 ## User Rules
 - **NEVER deploy without asking first**
@@ -194,7 +194,10 @@ Token format: AES-256-GCM encrypted via `next-auth/jwt` `encode()`. NOT signed J
 `getSessionUser(req)` reads cookie, decrypts via `jose.jwtDecrypt` with HKDF key derivation (`@panva/hkdf`). Uses `crypto.subtle` compatible HKDF for Edge Runtime. Returns full SessionUser with id, name, email, phone, role.
 
 ### Session Persistence (IMPORTANT)
-After setting cookies via `/api/auth/otp-login` or `/api/auth/admin-login`, use `window.location.href` (full page reload) instead of `router.push()` + `router.refresh()`. Client-side navigation in Next.js App Router preserves the `SessionProvider` instance, which doesn't re-fetch the session when cookies change externally.
+- Session persists for 10 years — users NEVER auto-logout
+- Only explicit "Sign Out" button logs them out
+- After setting cookies via `/api/auth/otp-login` or `/api/auth/admin-login`, use `window.location.href` (full page reload) instead of `router.push()` + `router.refresh()`
+- `jwt` callback DB query is wrapped in try/catch so token fields survive DB failures
 
 ### CRITICAL: Token format
 All auth tokens must use `next-auth/jwt` `encode()` (AES-256-GCM encrypted), NOT `jose.SignJWT` (HS256 signed). NextAuth's default decode uses `jwtDecrypt` which cannot decrypt signed tokens — session will always be empty if formats mismatch.
@@ -234,4 +237,4 @@ npm run lint       # ESLint
 - Branch: `main`
 - All code pushed to GitHub
 - Commit before pushing: run `npm run build` to verify
-- Last deploy: `db81f86` — fix: session persistence across page refreshes
+- Last deploy: `7d0eb91` — fix: never auto-logout, session persists 10 years
