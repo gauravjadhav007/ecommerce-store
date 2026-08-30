@@ -16,7 +16,6 @@ function LoginForm() {
   const [email, setEmail] = useState("");
   const [otp, setOtp] = useState("");
 
-  const isCartRedirect = callbackUrl === "/cart";
   const isCheckoutRedirect = callbackUrl === "/checkout";
 
   const handleSendOtp = async (e: React.FormEvent) => {
@@ -98,10 +97,9 @@ function LoginForm() {
           return;
         }
 
-        router.push(callbackUrl);
-        router.refresh();
+        window.location.href = callbackUrl;
       } else {
-        router.push(`/register?email=${encodeURIComponent(email)}&callbackUrl=${encodeURIComponent(callbackUrl)}`);
+        window.location.href = `/register?email=${encodeURIComponent(email)}&callbackUrl=${encodeURIComponent(callbackUrl)}`;
       }
     } catch {
       setError("Something went wrong");
@@ -117,9 +115,8 @@ function LoginForm() {
           <AlertTriangle size={20} className="text-amber-500 flex-shrink-0 mt-0.5" />
           <div>
             <p className="text-sm font-medium text-amber-800">
-              {isCartRedirect && "Login to view your cart"}
               {isCheckoutRedirect && "Login to proceed with checkout"}
-              {!isCartRedirect && !isCheckoutRedirect && "Login required to access this page"}
+              {!isCheckoutRedirect && "Login required to access this page"}
             </p>
             <p className="text-xs text-amber-600 mt-1">Please sign in to continue</p>
           </div>

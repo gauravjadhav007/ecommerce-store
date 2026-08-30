@@ -126,8 +126,7 @@ function RegisterForm() {
       if (!result.ok) {
         router.push(`/login?callbackUrl=${encodeURIComponent(callbackUrl)}`);
       } else {
-        router.push(callbackUrl);
-        router.refresh();
+        window.location.href = callbackUrl;
       }
     } catch {
       setError("Something went wrong");

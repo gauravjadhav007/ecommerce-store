@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
-const protectedRoutes = ["/cart", "/checkout"];
+const protectedRoutes = ["/checkout"];
 const adminRoutes = ["/admin"];
 const adminLoginRoutes = ["/admin/login"];
 const authRoutes = ["/login", "/register"];
@@ -9,8 +9,14 @@ const authRoutes = ["/login", "/register"];
 function base64UrlDecode(str: string): string {
   let base64 = str.replace(/-/g, "+").replace(/_/g, "/");
   while (base64.length % 4) base64 += "=";
-  if (typeof atob !== "undefined") return atob(base64);
-  return Buffer.from(base64, "base64").toString("utf-8");
+  try {
+    if (typeof atob === "function") return atob(base64);
+  } catch {}
+  try {
+    if (typeof Buffer !== "undefined") return Buffer.from(base64, "base64").toString("utf-8");
+  } catch {}
+  const bytes = Uint8Array.from(base64, (c) => c.charCodeAt(0));
+  return new TextDecoder().decode(bytes);
 }
 
 function decodeToken(token: string): { role?: string } | null {

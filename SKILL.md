@@ -7,17 +7,19 @@
 - **GitHub**: https://github.com/gauravjadhav007/ecommerce-store.git
 - **Vercel project**: `gauravjadhav561-8665s-projects/ecommerce-store`
 - **DNS**: GoDaddy
+- **Admin credentials**: `gaurav.jadhav561@gmail.com` / `Gaurav@007`
 
 ## User Rules
 - **NEVER deploy without asking first**
 - **Always test before deploying**
+- **No secrets in SKILL.md** — all credentials referenced from `.env` file
 
 ## Tech Details
 - **Database**: PostgreSQL on Neon (connection string in `DATABASE_URL` env var)
 - **Auth**: NextAuth v4 (JWT strategy) + custom `jose` JWT for OTP/admin login
 - **Email**: Resend API (key in `RESEND_API_KEY` env var), domain `gtshoppingonline.in` verified, sender `noreply@gtshoppingonline.in`
 - **Payments**: Razorpay live (keys in `RAZORPAY_KEY_ID` / `RAZORPAY_KEY_SECRET` env vars)
-- **SMS**: MSG91 — **demo mode**, SMS disabled (no GST/DLT)
+- **SMS**: MSG91 — **demo mode**, SMS disabled (no GST/DLT). Phone OTP removed from codebase.
 - **Prisma output**: `../src/generated/prisma` (NOT default path)
 - **OTP expiry**: 10 minutes
 
@@ -30,12 +32,12 @@ Required variables:
 - `RAZORPAY_KEY_ID` / `RAZORPAY_KEY_SECRET` — Razorpay credentials
 - `NEXT_PUBLIC_RAZORPAY_KEY_ID` — Razorpay client-side key
 - `RESEND_API_KEY` — Resend email API key
-- `MSG91_AUTH_KEY` — MSG91 SMS API key
+- `MSG91_AUTH_KEY` — MSG91 SMS API key (not used — phone OTP removed)
 
 ## Database Models (Prisma)
 | Model | Key Fields | Notes |
 |-------|-----------|-------|
-| User | id, name, firstName, lastName, gender, dob, email (unique), phone (unique), password, image, role (CUSTOMER/ADMIN) | |
+| User | id, name, firstName, lastName, gender, dob, email (unique), phone (unique optional), password, image, role (CUSTOMER/ADMIN) | Phone is optional |
 | Product | id, name, slug (unique), description, price, compareAt, images (JSON string), sku, stock, isActive, featured, isDigital, downloadUrl, categoryId | |
 | Variant | id, name, price, stock, sku (unique), productId | Cascade delete with Product |
 | Category | id, name (unique), slug (unique), image | |
@@ -54,11 +56,11 @@ Customer Pages:
   page.tsx                          — Homepage
   products/page.tsx                 — Product listing
   products/[slug]/page.tsx          — Product detail
-  cart/page.tsx                     — Shopping cart (protected)
-  checkout/page.tsx                 — Physical checkout (protected)
+  cart/page.tsx                     — Shopping cart (GUEST ACCESSIBLE, no login required)
+  checkout/page.tsx                 — Physical checkout (login required)
   checkout/digital/page.tsx         — Digital checkout
   order-confirmed/page.tsx          — Order success
-  login/page.tsx                    — Email OTP login
+  login/page.tsx                    — Email OTP login (new vs existing user flow)
   register/page.tsx                 — Email OTP signup (accepts ?email= param)
   account/page.tsx                  — Account dashboard
   account/orders/page.tsx           — Order history
@@ -91,15 +93,13 @@ Auth:
   auth/admin-login/route.ts         — Admin login → jose JWT → set cookie
 
 OTP:
-  otp/send/route.ts                 — Send OTP (phone via MSG91)
   otp/email/route.ts                — Send OTP (email via Resend)
-  otp/verify/route.ts               — Verify OTP code
+  otp/verify/route.ts               — Verify OTP code (email only, phone removed)
 
 User:
-  register/route.ts                 — Register user (name, email, phone, password)
-  user/register/route.ts            — Another register endpoint
+  register/route.ts                 — Register user (name, email, phone optional)
   user/profile/route.ts             — User profile CRUD
-  user/check-phone/route.ts         — Check email/phone existence
+  user/check-phone/route.ts         — Check email existence
 
 Products:
   products/route.ts                 — GET products list
@@ -131,8 +131,8 @@ Other:
 
 ### Lib (src/lib/)
 ```
-auth.ts              — NextAuth config (authOptions, CredentialsProvider, JWT callbacks)
-session.ts           — getSessionUser(), decodeToken() — reads cookies, decodes JWT/base64
+auth.ts              — NextAuth config (authOptions, CredentialsProvider, JWT callbacks with jwt.decode via jose)
+session.ts           — getSessionUser(), decodeToken() — reads cookies, decodes JWT with atob/Buffer fallback for Edge Runtime
 prisma.ts            — Prisma client singleton
 otp.ts               — createOtp(), generateOtp(), verifyOtp() — 10 min expiry
 email.ts             — sendEmail() via Resend, sendOtpEmail(to, code, purpose), sendOrderConfirmation()
@@ -145,10 +145,10 @@ whatsapp.ts          — WhatsApp integration
 
 ### Components (src/components/)
 ```
-Header.tsx           — Mobile hamburger menu, profile dropdown (touch events)
+Header.tsx           — Profile icon → /account (logged in) or /login (logged out); mobile menu with full account links
 Footer.tsx           — Site footer
 LayoutShell.tsx      — Layout wrapper
-Providers.tsx        — SessionProvider wrapper (client component)
+Providers.tsx        — SessionProvider wrapper (client component, no session prop passed)
 ProductCard.tsx      — Product card (physical)
 FeaturedProductCard.tsx — Featured product card
 ProductGallery.tsx   — Image gallery
@@ -157,13 +157,19 @@ Logo.tsx             — Logo component
 GoogleAnalytics.tsx  — GA tracking
 ```
 
+### Stores (src/stores/)
+```
+cart.ts              — Zustand cart store (guest cart, localStorage, no auth required)
+```
+
 ## Auth Flow (CRITICAL)
 
 ### How Auth Works
-1. **Login**: User enters email → POST `/api/otp/email` (sends OTP via Resend) → verify OTP at `/api/otp/verify` → POST `/api/auth/otp-login` → creates `jose` JWT → sets `next-auth.session-token` cookie
-2. **Register**: User enters email → OTP → verify → POST `/api/register` (creates user) → auto-login via otp-login
-3. **Admin Login**: Email + password → POST `/api/auth/admin-login` → validates bcrypt password + ADMIN role → creates `jose` JWT → sets cookie
-4. **Middleware**: Reads `next-auth.session-token` or `__Secure-next-auth.session-token`, decodes JWT payload, checks role for admin routes
+1. **Login**: User enters email → POST `/api/otp/email` (sends OTP via Resend) → verify OTP at `/api/otp/verify` → check if email exists → if exists: POST `/api/auth/otp-login` → jose JWT cookie → `window.location.href` redirect (full page reload for session persistence); if new: redirect to `/register?email=...`
+2. **Register**: User enters email → OTP → verify → enter name + optional phone → POST `/api/register` (creates user) → auto-login via otp-login → `window.location.href` redirect
+3. **Admin Login**: Email + password → POST `/api/auth/admin-login` → validates bcrypt password + ADMIN role → jose JWT cookie
+4. **Middleware**: Reads `next-auth.session-token` or `__Secure-next-auth.session-token`, decodes JWT payload via `atob()` (Edge Runtime compatible), checks role for admin routes
+5. **Session**: `jwt.decode` in NextAuth authOptions uses `jose.jwtVerify` to decode our tokens. Session endpoint returns full user data.
 
 ### JWT Structure (jose SignJWT)
 ```js
@@ -183,20 +189,25 @@ GoogleAnalytics.tsx  — GA tracking
 - `__Secure-next-auth.session-token` (secure: true, for production)
 
 ### Session Token Decode (src/lib/session.ts)
-`getSessionUser(req)` reads cookie, supports both base64url and JWT `payload.split(".")[1]` decode. Checks for `id` and `role` fields.
+`getSessionUser(req)` reads cookie, supports both base64url and JWT `payload.split(".")[1]` decode. Uses `atob()` for Edge Runtime compatibility (NOT `Buffer.from` which crashes in Edge).
 
-## Active Issues
+### Session Persistence (IMPORTANT)
+After setting cookies via `/api/auth/otp-login` or `/api/auth/admin-login`, use `window.location.href` (full page reload) instead of `router.push()` + `router.refresh()`. Client-side navigation in Next.js App Router preserves the `SessionProvider` instance, which doesn't re-fetch the session when cookies change externally.
 
-### useSession() Returns `{}` (HIGH PRIORITY)
-- **Problem**: `/api/auth/session` returns empty object `{}` even though `jose` JWT is set in cookie
-- **Root Cause**: NextAuth's session endpoint can't decode `jose`-signed JWT because we bypassed NextAuth's signIn and set cookie directly
-- **Fix Applied**: Added `jwt.decode` function in `authOptions` using `jose.jwtVerify` to explicitly decode our tokens, plus `secret: process.env.NEXTAUTH_SECRET`
-- **Still needed**: Set `NEXTAUTH_URL=https://www.gtshoppingonline.in` in Vercel production env vars (currently `http://localhost:3000` in `.env` for local dev)
-- **Impact**: `useSession()` returns `{ session: null }` → account pages show blank → header profile dropdown shows nothing
-- **Account pages check**: `if (!session) return null;` → renders blank
+## Route Protection (Middleware)
+```
+Protected routes (login required): /checkout
+Guest accessible: /cart, /products, /account, all public pages
+Admin routes (/admin/*): require ADMIN role token
+Auth routes (/login, /register): redirect to / if already logged in
+```
 
-### NEXTAUTH_URL Mismatch
-- `.env` has `NEXTAUTH_URL="http://localhost:3000"` — this may need to be `https://www.gtshoppingonline.in` in Vercel production env
+## Key Architectural Decisions
+- **Cart is guest-accessible**: Uses Zustand + localStorage, no auth required. Login only needed at checkout.
+- **Header profile icon**: Direct link to `/account` page (no dropdown menu on desktop).
+- **Mobile hamburger menu**: Shows Account, My Orders, Addresses, Returns & Refunds, Wishlist, Sign Out for logged-in users. Shows Sign In / Register for logged-out users.
+- **OTP flow is email-only**: Phone/SMS OTP removed (MSG91 doesn't work without GST/DLT).
+- **Edge Runtime**: Middleware uses `atob()` for JWT decoding (not `Buffer.from` which is unavailable in Edge).
 
 ## API Test Results
 - 26/26 tests passed (admin CRUD + customer auth + public APIs + security)
